@@ -602,7 +602,7 @@
   <div id="welcome-overlay">
     <div id="welcome-ring2"></div>
     <div id="welcome-ring"></div>
-    <div id="welcome-logo">AVEONE · AI BRAIN</div>
+    <div id="welcome-logo">X-ONE · AI BRAIN</div>
     <div id="welcome-text">◈ AGUARDANDO AUTORIZAÇÃO ◈</div>
     <button id="welcome-btn" onclick="startSystem()" type="button">▶&nbsp;&nbsp;INICIAR SISTEMA</button>
   </div>
@@ -628,11 +628,11 @@
     <div id="modeled"></div>
 
     <div id="jtitle">
-      <div class="main">AVEONE · AI BRAIN</div>
+      <div class="main">X-ONE · AI BRAIN</div>
       <div class="sub">NEURAL NETWORK &nbsp;·&nbsp; SISTEMA ATIVO</div>
     </div>
 
-    <div id="alert">◈ AVEONE BURST ATIVO ◈</div>
+    <div id="alert">◈ X-ONE BURST ATIVO ◈</div>
 
 
     <div id="statusbar">
@@ -662,7 +662,7 @@
     </div>
     <div id="thinking-bar"></div>
     <div id="chat-input-row">
-      <span id="chat-prompt">AVEONE://&gt;</span>
+      <span id="chat-prompt">X-ONE://&gt;</span>
       <input id="chat-input" type="text" placeholder="pergunta ou usa o microfone..." autocomplete="off"/>
       <button class="chat-btn mic" id="mic-btn" onclick="toggleMic()">🎙</button>
       <button class="chat-btn" onclick="sendMessage()">ENVIAR</button>
@@ -967,7 +967,7 @@
       burstMode  = true;
       burstTimer = 110;
       const al = document.getElementById('alert');
-      al.textContent = '⚡ AVEONE BURST ATIVO ⚡';
+      al.textContent = '⚡ X-ONE BURST ATIVO ⚡';
       al.classList.add('show');
       setTimeout(() => al.classList.remove('show'), 2500);
       for (let i = 0; i < 28; i++) {
@@ -1161,7 +1161,7 @@
       const d = document.createElement('div');
       d.className = 'msg ' + type;
       if (type === 'bot') {
-        d.innerHTML = '<span class="tag">◈ AVEONE</span>' + escapeHtml(text);
+        d.innerHTML = '<span class="tag">◈ X-ONE</span>' + escapeHtml(text);
       } else {
         d.textContent = text;
       }
@@ -1191,7 +1191,7 @@
       botEl.className = 'msg bot';
       const tagSpan = document.createElement('span');
       tagSpan.className = 'tag';
-      tagSpan.textContent = '◈ AVEONE';
+      tagSpan.textContent = '◈ X-ONE';
       botEl.appendChild(tagSpan);
       const textNode = document.createTextNode('');
       botEl.appendChild(textNode);
