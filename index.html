@@ -524,8 +524,8 @@
       border-color: #aa44ffaa;
       color: #fff;
     }
-    .chat-btn.mic { border-color: #00eeff44; color: #00eeff; }
-    .chat-btn.mic:hover { background: rgba(0,238,255,.12); border-color: #00eeffaa; }
+    .chat-btn.mic { border-color: #00eeffaa; color: #00eeff; box-shadow: 0 0 8px #00eeff33; }
+    .chat-btn.mic:hover { background: rgba(0,238,255,.18); border-color: #00eeff; box-shadow: 0 0 14px #00eeff55; }
     .chat-btn.mic.listening {
       border-color: #ff3366;
       color: #ff3366;
@@ -562,8 +562,8 @@
     .model-btn {
       flex: 1;
       background: transparent;
-      border: 1px solid #aa44ff22;
-      color: #33224466;
+      border: 1px solid #aa44ff55;
+      color: #aa44ffcc;
       font-family: 'Share Tech Mono', monospace;
       font-size: 8px;
       padding: 5px 8px;
@@ -572,18 +572,20 @@
       transition: all .25s;
       text-transform: uppercase;
     }
-    .model-btn:hover { border-color: #aa44ff55; color: #aa44ff88; }
+    .model-btn:hover { border-color: #aa44ffaa; color: #cc88ff; }
     .model-btn.active-hack {
-      background: rgba(255,60,60,0.08);
-      border-color: #ff4444aa;
-      color: #ff6666;
-      text-shadow: 0 0 8px #ff444466;
+      background: rgba(255,60,60,0.12);
+      border-color: #ff4444cc;
+      color: #ff8888;
+      text-shadow: 0 0 10px #ff444488;
+      box-shadow: 0 0 10px #ff333322;
     }
     .model-btn.active-fast {
-      background: rgba(0,238,255,0.07);
-      border-color: #00eeff88;
+      background: rgba(0,238,255,0.10);
+      border-color: #00eeffcc;
       color: #00eeff;
-      text-shadow: 0 0 8px #00eeff44;
+      text-shadow: 0 0 10px #00eeff88;
+      box-shadow: 0 0 10px #00eeff22;
     }
     #model-label {
       font-family: 'Share Tech Mono', monospace;
@@ -671,9 +673,7 @@
   </div>
 
   <div id="controls">
-    <button class="cbtn" onclick="doBurst()">⚡ BURST</button>
     <button class="cbtn cyan" onclick="doWave()">〜 ONDA</button>
-    <button class="cbtn" onclick="doReset()">↺ RESET</button>
   </div>
 
   <script>
