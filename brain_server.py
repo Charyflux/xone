@@ -151,7 +151,7 @@ chat_history: list = []
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
-app = FastAPI(title="JAVEONE AI BRAIN", version="3.0.0")
+app = FastAPI(title="X-ONE", version="3.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -364,7 +364,7 @@ async def health():
 if __name__ == "__main__":
     print(f"""
   ╔══════════════════════════════════════════╗
-  ║   JAVEONE · AI BRAIN v3.0                ║
+  ║   X-ONE v3.0                              ║
   ║   http://localhost:{PORT:<5}                 ║
   ║   Modelo : {OLLAMA_MODEL:<30}║
   ╚══════════════════════════════════════════╝
