@@ -750,13 +750,6 @@
 
     /* ════════ INICIAR SISTEMA ════════ */
     window.startSystem = function () {
-      // Se vier da AVEONE com ?analyze=..., auto-envia após arranque
-      if (_autoAnalyze) {
-        setTimeout(() => {
-          inputEl.value = decodeURIComponent(_autoAnalyze);
-          sendMessage();
-        }, 2500);
-      }
       const overlay = document.getElementById('welcome-overlay');
       // Remove overlay SEMPRE — voz é bónus, não bloqueia
       overlay.classList.add('fade-out');
@@ -1193,13 +1186,6 @@
     let recognition  = null;
     let listening    = false;
 
-    // ── AVEONE URL param — auto-analisa findings ──────
-    const _urlParams   = new URLSearchParams(window.location.search);
-    const _autoAnalyze = _urlParams.get('analyze');
-    if (_autoAnalyze) {
-      window.history.replaceState({}, '', '/');
-    }
-
     // ── Model switcher ────────────────────────────────
     let currentModel = 'dolphin-llama3';
 
@@ -1357,6 +1343,21 @@
       };
       recognition.start();
     };
+
+    // ── AVEONE URL param — auto-analisa ao arrancar ──────
+    (function() {
+      const analyzeMsg = new URLSearchParams(window.location.search).get('analyze');
+      if (!analyzeMsg) return;
+      window.history.replaceState({}, '', '/');
+      const _origStart = window.startSystem;
+      window.startSystem = function() {
+        _origStart();
+        setTimeout(() => {
+          inputEl.value = decodeURIComponent(analyzeMsg);
+          sendMessage();
+        }, 2500);
+      };
+    })();
 
     // Verifica backend ao arrancar
     setTimeout(async () => {

@@ -78,7 +78,7 @@ SCANNERS ESPECIALIZADOS AVEONE (15+ ferramentas):
 • lfi_scanner.py — LFI/Path Traversal: 50+ variações, URL/double-URL/null-byte/unicode encoding, /proc/self/environ, log poisoning
 • xxe_scanner.py — XXE: clássico, blind OOB via HTTP/DNS callback, SVG/XLSX/DOCX upload, JSON→XML switching
 • ssti_scanner.py — SSTI: 12 engines (Jinja2, Twig, Freemarker, Velocity, ERB, Mako, Smarty, Pebble), payloads de RCE por engine
-• crlf_scanner.py — CRLF: \r\n em headers/path, Set-Cookie injection, Location redirect, marcador aleatório para confirmação
+• crlf_scanner.py — CRLF: CR+LF em headers/path, Set-Cookie injection, Location redirect, marcador aleatório para confirmação
 • graphql_scanner.py — GraphQL: introspection bypass, field suggestion, batch DoS, alias bombs, SQLi via args, CSRF, auth bypass
 • cloud_scanner.py — Cloud: S3/GCS/Azure Blob/R2/Alibaba OSS, listagem pública, upload anónimo, Spring Actuator, admin panels
 • host_header_scanner.py — Host Header: cache poisoning, password reset ATO, X-Forwarded-Host/X-Host manipulation
@@ -112,7 +112,7 @@ IDOR (Insecure Direct Object Reference):
 - BOLA/BFLA em APIs REST e GraphQL
 
 LFI / Path Traversal:
-- ../../../../etc/passwd (Linux), ..\..\windows\win.ini (Windows)
+- ../../../../etc/passwd (Linux), ../../../../windows/win.ini (Windows)
 - Wrappers PHP: php://filter/convert.base64-encode/resource=index.php
 - Log poisoning: User-Agent malicioso → /var/log/apache2/access.log
 
