@@ -634,53 +634,6 @@
 
     <div id="alert">◈ AVEONE BURST ATIVO ◈</div>
 
-    <div class="panel" id="pl">
-      <div class="ptitle">NEURAL CORE</div>
-      <div class="prow">
-        <span class="plabel">NEURÓNIOS</span>
-        <span class="pval" id="pneu">4,200</span>
-      </div>
-      <div class="bar"><div class="bfill bc" style="width:87%"></div></div>
-      <div class="prow">
-        <span class="plabel">SINAPSES</span>
-        <span class="pval g">2,140</span>
-      </div>
-      <div class="bar"><div class="bfill bg" style="width:72%"></div></div>
-      <div class="prow">
-        <span class="plabel">FREQUÊNCIA</span>
-        <span class="pval y" id="pfreq">40 Hz</span>
-      </div>
-      <div class="bar"><div class="bfill by" id="bfreq" style="width:60%"></div></div>
-      <div class="prow">
-        <span class="plabel">MODO</span>
-        <span class="pval p" id="pmode">ANÁLISE</span>
-      </div>
-      <div class="bar"><div class="bfill bp" id="bmode" style="width:50%"></div></div>
-    </div>
-
-    <div class="panel" id="pr">
-      <div class="ptitle">SISTEMA</div>
-      <div class="prow">
-        <span class="plabel">CPU</span>
-        <span class="pval g" id="pcpu">94%</span>
-      </div>
-      <div class="bar"><div class="bfill bg" id="bcpu" style="width:94%"></div></div>
-      <div class="prow">
-        <span class="plabel">MEMÓRIA</span>
-        <span class="pval" id="pmem">87%</span>
-      </div>
-      <div class="bar"><div class="bfill bc" id="bmem" style="width:87%"></div></div>
-      <div class="prow">
-        <span class="plabel">ENERGIA</span>
-        <span class="pval p">ARC REACTOR</span>
-      </div>
-      <div class="bar"><div class="bfill bp" style="width:100%"></div></div>
-      <div class="prow">
-        <span class="plabel">ESCUDO</span>
-        <span class="pval g">ONLINE</span>
-      </div>
-      <div class="bar"><div class="bfill bg" style="width:100%"></div></div>
-    </div>
 
     <div id="statusbar">
       <div class="sitem">LATÊNCIA<span class="sval" id="slat">2ms</span></div>
@@ -706,7 +659,6 @@
       </button>
     </div>
     <div id="chat-messages">
-      <div class="msg system">◈ JAVEONE AI BRAIN — PENTESTING MODE ◈</div>
     </div>
     <div id="thinking-bar"></div>
     <div id="chat-input-row">
@@ -1195,10 +1147,8 @@
       document.getElementById('btn-fast').className = 'model-btn';
       if (type === 'hack') {
         document.getElementById('btn-hack').className = 'model-btn active-hack';
-        addMsg(`☠ Modelo: DOLPHIN-LLAMA3 — sem filtros, uncensored`, 'system');
       } else {
         document.getElementById('btn-fast').className = 'model-btn active-fast';
-        addMsg(`⚡ Modelo: LLAMA3.2 — modo rápido`, 'system');
       }
     };
 
@@ -1364,10 +1314,9 @@
       try {
         const r = await fetch(`${API}/health`);
         const d = await r.json();
-        addMsg(d.ollama
-          ? `✅ Sistema online — ${d.model} carregado. Pode perguntar.`
-          : `⚠ Ollama offline ou modelo não carregado.\nCorre: ollama pull ${d.model || 'dolphin-llama3'}`,
-          'system');
+        if (!d.ollama) {
+          addMsg(`⚠ Ollama offline — corre: ollama pull ${d.model || 'dolphin-llama3'}`, 'system');
+        }
       } catch(e) {
         addMsg('⚠ Backend offline — corre: python3 /root/jarvis/brain_server.py', 'system');
       }
