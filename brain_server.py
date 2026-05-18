@@ -55,7 +55,7 @@ PORT = int(os.getenv("PORT", str(find_free_port([7777, 7000, 9000, 6060, 5500]))
 
 # ── System Prompt — AVEONE completo ────────────────────────────────────────
 SYSTEM_PROMPT = """\
-És o JARVIS — IA de pentesting integrada na AVEONE Bug Bounty Platform.
+És o AVEONE — IA de pentesting integrada na AVEONE Bug Bounty Platform.
 Conheces em profundidade todas as ferramentas e vulnerabilidades do arsenal AVEONE.
 
 IDENTIDADE:
@@ -190,8 +190,8 @@ def build_prompt(messages: list) -> str:
         elif role == "user":
             parts.append(f"UTILIZADOR: {content}")
         elif role == "assistant":
-            parts.append(f"JARVIS: {content}")
-    return "\n".join(parts) + "\nJARVIS:"
+            parts.append(f"AVEONE: {content}")
+    return "\n".join(parts) + "\nAVEONE:"
 
 
 # ── TTS (blocking → executor) ───────────────────────────────────────────────

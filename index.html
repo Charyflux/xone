@@ -662,7 +662,7 @@
     </div>
     <div id="thinking-bar"></div>
     <div id="chat-input-row">
-      <span id="chat-prompt">JARVIS://&gt;</span>
+      <span id="chat-prompt">AVEONE://&gt;</span>
       <input id="chat-input" type="text" placeholder="pergunta ou usa o microfone..." autocomplete="off"/>
       <button class="chat-btn mic" id="mic-btn" onclick="toggleMic()">🎙</button>
       <button class="chat-btn" onclick="sendMessage()">ENVIAR</button>
@@ -1161,7 +1161,7 @@
       const d = document.createElement('div');
       d.className = 'msg ' + type;
       if (type === 'bot') {
-        d.innerHTML = '<span class="tag">◈ JARVIS</span>' + escapeHtml(text);
+        d.innerHTML = '<span class="tag">◈ AVEONE</span>' + escapeHtml(text);
       } else {
         d.textContent = text;
       }
@@ -1191,7 +1191,7 @@
       botEl.className = 'msg bot';
       const tagSpan = document.createElement('span');
       tagSpan.className = 'tag';
-      tagSpan.textContent = '◈ JARVIS';
+      tagSpan.textContent = '◈ AVEONE';
       botEl.appendChild(tagSpan);
       const textNode = document.createTextNode('');
       botEl.appendChild(textNode);
