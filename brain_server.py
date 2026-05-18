@@ -173,11 +173,14 @@ async def chat(request: Request):
     if not user_msg:
         return JSONResponse({"error": "mensagem vazia"}, status_code=400)
 
+    # modelo por pedido (frontend envia o modelo selecionado)
+    model = body.get("model", OLLAMA_MODEL).strip() or OLLAMA_MODEL
+
     chat_history.append({"role": "user", "content": user_msg})
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + chat_history[-MAX_HISTORY:]
 
     payload = {
-        "model":  OLLAMA_MODEL,
+        "model":  model,
         "prompt": build_prompt(messages),
         "stream": True,
         "options": {
@@ -225,6 +228,17 @@ async def chat(request: Request):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/api/models")
+async def list_models():
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(f"{OLLAMA_URL}/api/tags")
+            models = [m["name"] for m in r.json().get("models", [])]
+        return {"models": models}
+    except Exception:
+        return {"models": [OLLAMA_MODEL]}
 
 
 @app.post("/api/clear")

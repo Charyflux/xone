@@ -548,6 +548,52 @@
       100% { background-position: 200% 0; }
     }
     #thinking-bar.active { display: block; }
+
+    /* ── Model Switcher ─────────────────────────────── */
+    #model-switcher {
+      display: flex;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(3,0,18,0.75);
+      border: 1px solid #aa44ff22;
+      border-bottom: none;
+      backdrop-filter: blur(12px);
+    }
+    .model-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid #aa44ff22;
+      color: #33224466;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      padding: 5px 8px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      transition: all .25s;
+      text-transform: uppercase;
+    }
+    .model-btn:hover { border-color: #aa44ff55; color: #aa44ff88; }
+    .model-btn.active-hack {
+      background: rgba(255,60,60,0.08);
+      border-color: #ff4444aa;
+      color: #ff6666;
+      text-shadow: 0 0 8px #ff444466;
+    }
+    .model-btn.active-fast {
+      background: rgba(0,238,255,0.07);
+      border-color: #00eeff88;
+      color: #00eeff;
+      text-shadow: 0 0 8px #00eeff44;
+    }
+    #model-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 7px;
+      color: #33224488;
+      letter-spacing: 2px;
+      align-self: center;
+      white-space: nowrap;
+      padding-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -648,8 +694,19 @@
 
   <!-- Chat Panel -->
   <div id="chat-panel">
+    <div id="model-switcher">
+      <span id="model-label">MODELO</span>
+      <button class="model-btn active-hack" id="btn-hack"
+              onclick="selectModel('dolphin-llama3','hack')">
+        ☠ DOLPHIN · SEM FILTROS
+      </button>
+      <button class="model-btn" id="btn-fast"
+              onclick="selectModel('llama3.2','fast')">
+        ⚡ LLAMA3.2 · RÁPIDO
+      </button>
+    </div>
     <div id="chat-messages">
-      <div class="msg system">◈ AVEONE AI BRAIN — PENTESTING MODE ◈</div>
+      <div class="msg system">◈ JAVEONE AI BRAIN — PENTESTING MODE ◈</div>
     </div>
     <div id="thinking-bar"></div>
     <div id="chat-input-row">
@@ -1129,6 +1186,22 @@
     let recognition  = null;
     let listening    = false;
 
+    // ── Model switcher ────────────────────────────────
+    let currentModel = 'dolphin-llama3';
+
+    window.selectModel = function(model, type) {
+      currentModel = model;
+      document.getElementById('btn-hack').className = 'model-btn';
+      document.getElementById('btn-fast').className = 'model-btn';
+      if (type === 'hack') {
+        document.getElementById('btn-hack').className = 'model-btn active-hack';
+        addMsg(`☠ Modelo: DOLPHIN-LLAMA3 — sem filtros, uncensored`, 'system');
+      } else {
+        document.getElementById('btn-fast').className = 'model-btn active-fast';
+        addMsg(`⚡ Modelo: LLAMA3.2 — modo rápido`, 'system');
+      }
+    };
+
     // Enter para enviar
     inputEl.addEventListener('keydown', e => {
       if (e.key === 'Enter') sendMessage();
@@ -1178,7 +1251,7 @@
         const res = await fetch(`${API}/api/chat`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: msg})
+          body: JSON.stringify({message: msg, model: currentModel})
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
