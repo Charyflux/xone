@@ -381,7 +381,61 @@ Clica em **CLR** para limpar o histórico visual e reiniciar a conversa.
 
 ## 🔗 Integração AVEONE
 
-O X-ONE está integrado nativamente com o toolkit AVEONE. Em cada card de scanner aparece o botão **⚡ Analisar no X-ONE**.
+O X-ONE integra-se **automaticamente** com a AVEONE Bug Bounty Platform de duas formas:
+
+### 1. Auto-sync (painel AVEONE → X-ONE)
+
+O painel AVEONE (`panel.html`) contém um bloco JS que **polls `/api/results` a cada 30 segundos** e envia cada nova vulnerabilidade encontrada ao X-ONE — sem configuração adicional.
+
+**Como funciona:**
+1. Abre o painel AVEONE no browser → inicia um scan
+2. O JS deteta counts novos (XSS, SQLi, LFI, SSTI, CVEs, IDOR…)
+3. POST automático para `http://localhost:7777/api/findings`
+4. O finding aparece no painel X-ONE com severidade correta
+
+**Mapa de severidades:**
+
+| Categoria AVEONE | Severidade X-ONE |
+|-----------------|-----------------|
+| `cves`, `ssti`, `rce` | Critical |
+| `xss`, `sqli`, `lfi`, `nosqli`, `xxe` | High |
+| `idor`, `ssrf`, `cors`, `crlf` | Medium |
+| `open_redirect` | Low |
+
+> **Requisito:** X-ONE deve estar a correr em `localhost:7777` enquanto usas o painel AVEONE.
+
+---
+
+### 2. xone_client.py — Integração nos scanners
+
+Usa `xone_client.py` para enviar findings diretamente de qualquer scanner Python:
+
+```bash
+# Copia o módulo para a pasta do scanner
+cp xone_client.py /caminho/do/teu/scanner/
+```
+
+```python
+from xone_client import xone
+
+# Envio simples
+xone.finding(
+    vuln_type = "XSS Reflected",
+    url       = "https://alvo.com/search?q=",
+    payload   = "<script>alert(1)</script>",
+    severity  = "High",
+    param     = "q",
+    context   = "Parâmetro refletido sem encode no corpo HTML",
+    tool      = "context_xss_scanner.py"
+)
+
+# Context manager — envia tudo no fim
+with xone.session("lfi_scanner.py") as s:
+    s.add("LFI", url, "../../../../etc/passwd", "High", param="file")
+    s.add("LFI", url2, "php://filter/...", "Critical", param="path")
+```
+
+**Envio assíncrono** (padrão): não bloqueia o scanner — corre em background thread.
 
 ### Scanners integrados
 
@@ -400,18 +454,30 @@ O X-ONE está integrado nativamente com o toolkit AVEONE. Em cada card de scanne
 | `tokenhunter.py` | Validação e teste de tokens encontrados |
 | `verify_findings.py` | Confirmação manual de findings |
 
-### Integração via API
+### Endpoints da API de Findings
 
 ```bash
-curl -X POST http://localhost:7777/api/analyze \
+# Enviar finding
+curl -X POST http://localhost:7777/api/findings \
   -H "Content-Type: application/json" \
   -d '{
     "vuln_type": "XSS Stored",
     "url": "https://alvo.com/comentarios?msg=",
     "payload": "<script>alert(1)</script>",
     "severity": "High",
-    "context": "Parâmetro msg refletido sem sanitização"
+    "param": "msg",
+    "context": "Parâmetro msg refletido sem sanitização",
+    "tool": "meu_scanner.py"
   }'
+
+# Listar todos os findings
+curl http://localhost:7777/api/findings
+
+# Apagar todos os findings
+curl -X DELETE http://localhost:7777/api/findings
+
+# Gerar relatório completo (AI)
+curl http://localhost:7777/api/report
 ```
 
 ---
