@@ -750,6 +750,13 @@
 
     /* ════════ INICIAR SISTEMA ════════ */
     window.startSystem = function () {
+      // Se vier da AVEONE com ?analyze=..., auto-envia após arranque
+      if (_autoAnalyze) {
+        setTimeout(() => {
+          inputEl.value = decodeURIComponent(_autoAnalyze);
+          sendMessage();
+        }, 2500);
+      }
       const overlay = document.getElementById('welcome-overlay');
       // Remove overlay SEMPRE — voz é bónus, não bloqueia
       overlay.classList.add('fade-out');
@@ -1185,6 +1192,13 @@
     const thinkBar   = document.getElementById('thinking-bar');
     let recognition  = null;
     let listening    = false;
+
+    // ── AVEONE URL param — auto-analisa findings ──────
+    const _urlParams   = new URLSearchParams(window.location.search);
+    const _autoAnalyze = _urlParams.get('analyze');
+    if (_autoAnalyze) {
+      window.history.replaceState({}, '', '/');
+    }
 
     // ── Model switcher ────────────────────────────────
     let currentModel = 'dolphin-llama3';
