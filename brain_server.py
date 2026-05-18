@@ -9,6 +9,8 @@ import logging
 import os
 import socket
 import subprocess
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import AsyncGenerator
 
@@ -148,6 +150,7 @@ Quando recebes um finding do scanner AVEONE:
 """
 
 chat_history: list = []
+findings_store: list = []
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
@@ -341,6 +344,70 @@ async def list_models():
 async def clear_history():
     chat_history.clear()
     return {"ok": True}
+
+
+# ── Findings endpoints ───────────────────────────────────────────────────────
+@app.post("/api/findings")
+async def add_finding(request: Request):
+    body = await request.json()
+    finding = {
+        "id":       str(uuid.uuid4())[:8],
+        "ts":       datetime.now().strftime("%H:%M:%S"),
+        "date":     datetime.now().strftime("%Y-%m-%d"),
+        "vuln_type": body.get("vuln_type", "Unknown"),
+        "url":      body.get("url", ""),
+        "payload":  body.get("payload", ""),
+        "severity": body.get("severity", "Medium"),
+        "context":  body.get("context", ""),
+        "tool":     body.get("tool", "AVEONE"),
+        "param":    body.get("param", ""),
+        "evidence": body.get("evidence", ""),
+    }
+    findings_store.append(finding)
+    log.info(f"Finding: [{finding['severity']}] {finding['vuln_type']} @ {finding['url']}")
+    return {"id": finding["id"], "ok": True}
+
+
+@app.get("/api/findings")
+async def get_findings():
+    return {"findings": findings_store, "count": len(findings_store)}
+
+
+@app.delete("/api/findings")
+async def clear_findings():
+    findings_store.clear()
+    return {"ok": True}
+
+
+@app.get("/api/report")
+async def get_report():
+    if not findings_store:
+        return JSONResponse({"error": "sem findings"}, status_code=404)
+    sev_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3, "Info": 4}
+    sorted_f = sorted(findings_store, key=lambda f: sev_order.get(f["severity"], 5))
+    counts = {s: sum(1 for f in findings_store if f["severity"] == s)
+              for s in ["Critical", "High", "Medium", "Low", "Info"]}
+    lines = [
+        "# Security Report — X-ONE · AVEONE Platform",
+        f"**Data:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        f"**Total findings:** {len(findings_store)}",
+        " | ".join(f"**{s}:** {n}" for s, n in counts.items() if n > 0),
+        "", "---", "",
+    ]
+    for i, f in enumerate(sorted_f, 1):
+        lines += [
+            f"## {i}. [{f['severity']}] {f['vuln_type']}",
+            f"- **URL:** `{f['url']}`"      if f["url"]      else "",
+            f"- **Parâmetro:** `{f['param']}`" if f["param"]    else "",
+            f"- **Payload:** `{f['payload']}`" if f["payload"]  else "",
+            f"- **Evidência:** {f['evidence']}" if f["evidence"] else "",
+            f"- **Contexto:** {f['context']}"  if f["context"]  else "",
+            f"- **Ferramenta:** {f['tool']}",
+            f"- **Hora:** {f['date']} {f['ts']}",
+            "",
+        ]
+    report_text = "\n".join(l for l in lines if l is not None)
+    return JSONResponse({"report": report_text, "count": len(findings_store)})
 
 
 @app.get("/health")
