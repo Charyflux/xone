@@ -77,6 +77,14 @@ Usa o modelo `dolphin-llama3` — uma versão do Llama 3 **sem filtros e sem cen
 - Calcular **CVSS score** com justificação técnica
 - Classificar severidade (Critical / High / Medium / Low)
 
+### Interface e produtividade
+- **Syntax highlighting** automático em todos os blocos de código (Python, Bash, JS, SQL...)
+- **Cola imagens** direto no chat com Ctrl+V — envia screenshots para análise visual
+- **Botão PARAR** para cancelar respostas a meio
+- **Histórico persistente** — últimas 5 conversas guardadas, restauráveis com 1 clique
+- **Memória local SQLite** — a X-ONE lembra-se de tudo entre sessões
+- **Microfone** — dita perguntas por voz (push-to-talk)
+
 ---
 
 ## 📋 O que precisas
@@ -402,7 +410,33 @@ O X-ONE detecta automaticamente blocos de código nas respostas e aplica **synta
 
 ### Limpar o chat
 
-Clica em **CLR** para limpar o histórico visual e reiniciar a conversa.
+Clica em **CLR** para limpar o histórico visual e iniciar uma nova conversa (a conversa anterior fica guardada no histórico).
+
+---
+
+### Histórico de conversas (sidebar direita)
+
+O X-ONE guarda **todas as conversas automaticamente** numa base de dados local (`xone_memory.db`) — mesmo depois de fechar o browser ou o servidor.
+
+1. Clica em **◈ HISTÓRICO** no canto superior direito
+2. Abre uma sidebar com as **últimas 5 conversas**
+3. Cada card mostra: título (primeira mensagem), data e nº de mensagens
+4. Clica numa conversa para **restaurá-la completamente** (mensagens + contexto)
+5. **✕** apaga uma conversa individual
+6. **+ NOVA CONVERSA** começa uma sessão limpa
+
+> A X-ONE lembra-se de tudo entre sessões. Fecha e abre — continua de onde ficou.
+
+---
+
+### Memória persistente (SQLite)
+
+O X-ONE aprende individualmente com cada utilizador através de memória persistente local:
+
+- Cada resposta é guardada automaticamente em `xone_memory.db`
+- O contexto é restaurado ao retomar uma conversa anterior
+- Sem envio de dados para servidores externos — **100% privado e local**
+- Ficheiro `xone_memory.db` fica na pasta do projeto (podes fazer backup)
 
 ---
 
