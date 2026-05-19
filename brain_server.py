@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import socket
+import sqlite3
 import subprocess
 import uuid
 from datetime import datetime
@@ -197,7 +198,61 @@ FERRAMENTAS AVEONE:
 
 chat_history: list = []
 findings_store: list = []
-aveone_last_ping: float = 0.0   # epoch seconds of last ping from AVEONE panel
+aveone_last_ping: float = 0.0
+current_session_id: str = ""
+
+
+# ── SQLite — memória persistente ────────────────────────────────────────────
+DB_PATH = DIR / "xone_memory.db"
+
+def _db() -> sqlite3.Connection:
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def _init_db():
+    with _db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id          TEXT PRIMARY KEY,
+                title       TEXT,
+                created_at  TEXT,
+                updated_at  TEXT,
+                messages    TEXT
+            )
+        """)
+        conn.commit()
+
+_init_db()
+
+def _new_session() -> str:
+    sid = str(uuid.uuid4())[:8]
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with _db() as conn:
+        conn.execute(
+            "INSERT INTO sessions (id, title, created_at, updated_at, messages) VALUES (?,?,?,?,?)",
+            (sid, "Nova conversa", now, now, "[]")
+        )
+        conn.commit()
+    return sid
+
+def _save_session(sid: str, messages: list):
+    if not sid:
+        return
+    title = "Nova conversa"
+    for m in messages:
+        if m["role"] == "user":
+            title = m["content"][:60]
+            break
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with _db() as conn:
+        conn.execute(
+            "UPDATE sessions SET title=?, updated_at=?, messages=? WHERE id=?",
+            (title, now, json.dumps(messages), sid)
+        )
+        conn.commit()
+
+current_session_id = _new_session()
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
@@ -322,6 +377,7 @@ async def _stream_response(user_msg: str, model: str, image_b64: str = None) -> 
                         if chunk.get("done"):
                             full_reply = "".join(collected).strip()
                             chat_history.append({"role": "assistant", "content": full_reply})
+                            _save_session(current_session_id, chat_history)
                             audio_url = await generate_tts(full_reply)
                             yield f"data: {json.dumps({'token': '', 'done': True, 'audio_url': audio_url})}\n\n"
                             return
@@ -393,7 +449,70 @@ async def list_models():
 
 @app.post("/api/clear")
 async def clear_history():
+    global current_session_id
     chat_history.clear()
+    current_session_id = _new_session()
+    return {"ok": True}
+
+
+# ── Session endpoints ────────────────────────────────────────────────────────
+@app.get("/api/sessions")
+async def list_sessions():
+    with _db() as conn:
+        rows = conn.execute(
+            "SELECT id, title, created_at, updated_at, messages FROM sessions "
+            "ORDER BY updated_at DESC LIMIT 5"
+        ).fetchall()
+    result = []
+    for r in rows:
+        msgs = json.loads(r["messages"])
+        count = sum(1 for m in msgs if m["role"] == "user")
+        result.append({
+            "id":         r["id"],
+            "title":      r["title"],
+            "created_at": r["created_at"],
+            "updated_at": r["updated_at"],
+            "msg_count":  count,
+            "active":     r["id"] == current_session_id,
+        })
+    return {"sessions": result}
+
+
+@app.get("/api/sessions/{session_id}")
+async def get_session(session_id: str):
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT * FROM sessions WHERE id=?", (session_id,)
+        ).fetchone()
+    if not row:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"id": row["id"], "title": row["title"], "messages": json.loads(row["messages"])}
+
+
+@app.post("/api/sessions/{session_id}/restore")
+async def restore_session(session_id: str):
+    global current_session_id
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT * FROM sessions WHERE id=?", (session_id,)
+        ).fetchone()
+    if not row:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    chat_history.clear()
+    chat_history.extend(json.loads(row["messages"]))
+    current_session_id = session_id
+    return {"ok": True, "messages": chat_history}
+
+
+@app.delete("/api/sessions/{session_id}")
+async def delete_session(session_id: str):
+    global current_session_id
+    with _db() as conn:
+        conn.execute("DELETE FROM sessions WHERE id=?", (session_id,))
+        conn.commit()
+    if current_session_id == session_id:
+        current_session_id = _new_session()
+        chat_history.clear()
     return {"ok": True}
 
 
