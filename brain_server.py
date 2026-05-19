@@ -411,6 +411,32 @@ async def get_report():
     return JSONResponse({"report": report_text, "count": len(findings_store)})
 
 
+@app.post("/api/transcribe")
+async def transcribe(request: Request):
+    """Receives WAV audio from browser and returns transcribed text via Google STT."""
+    try:
+        import io, speech_recognition as sr
+        wav_bytes = await request.body()
+        if not wav_bytes:
+            return JSONResponse({"ok": False, "text": "", "error": "empty audio"})
+        recognizer = sr.Recognizer()
+        recognizer.energy_threshold = 300
+        recognizer.dynamic_energy_threshold = True
+        with sr.AudioFile(io.BytesIO(wav_bytes)) as source:
+            audio = recognizer.record(source)
+        text = recognizer.recognize_google(audio, language="pt-BR")
+        return JSONResponse({"ok": True, "text": text})
+    except sr.UnknownValueError:
+        return JSONResponse({"ok": False, "text": "", "error": "not understood"})
+    except sr.RequestError as e:
+        return JSONResponse({"ok": False, "text": "", "error": f"STT service error: {e}"})
+    except ModuleNotFoundError:
+        return JSONResponse({"ok": False, "text": "",
+                             "error": "SpeechRecognition not installed — run: pip install SpeechRecognition"})
+    except Exception as e:
+        return JSONResponse({"ok": False, "text": "", "error": str(e)})
+
+
 @app.post("/api/aveone/ping")
 async def aveone_ping():
     """AVEONE panel calls this every 30 s to signal it is open and authenticated."""

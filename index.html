@@ -1493,64 +1493,99 @@
       try { await fetch(`${API}/api/clear`, {method:'POST'}); } catch(e) {}
     };
 
-    // ── Microfone (Web Speech Recognition) ──────────────
-    window.toggleMic = function() {
-      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        addMsg('⚠ Browser não suporta microfone. Usa Chrome ou Brave.', 'system');
-        return;
-      }
-      if (listening) {
-        recognition && recognition.stop();
-        return;
-      }
+    // ── Microfone — gravação local → servidor transcreve ────
+    // Não usa webkitSpeechRecognition (bloqueado pelo Brave).
+    // Grava PCM via AudioContext, codifica WAV no browser,
+    // envia ao /api/transcribe do X-ONE (Python + Google STT).
+    let _micStream = null, _micCtx = null, _micProc = null, _micChunks = [];
 
-      // Pedir permissão explícita antes de iniciar
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => _startRecognition())
+    function _encodeWAV(samples, rate) {
+      const buf = new ArrayBuffer(44 + samples.length * 2);
+      const v   = new DataView(buf);
+      const ws  = s => { for (let i = 0; i < s.length; i++) v.setUint8(offset + i, s.charCodeAt(i)); let offset = 0; };
+      // helper: write string at offset
+      function wstr(off, s) { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); }
+      wstr(0,  'RIFF');  v.setUint32(4,  36 + samples.length * 2, true);
+      wstr(8,  'WAVE');  wstr(12, 'fmt ');
+      v.setUint32(16, 16, true);   // chunk size
+      v.setUint16(20, 1,  true);   // PCM
+      v.setUint16(22, 1,  true);   // mono
+      v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+      v.setUint16(32, 2,  true);   v.setUint16(34, 16, true);
+      wstr(36, 'data'); v.setUint32(40, samples.length * 2, true);
+      let off = 44;
+      for (let i = 0; i < samples.length; i++, off += 2) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return new Blob([buf], { type: 'audio/wav' });
+    }
+
+    function _stopMic() {
+      if (_micProc)   { _micProc.disconnect(); _micProc = null; }
+      if (_micCtx)    { _micCtx.close();        _micCtx  = null; }
+      if (_micStream) { _micStream.getTracks().forEach(t => t.stop()); _micStream = null; }
+      listening = false;
+      micBtn.classList.remove('listening');
+      micBtn.textContent = '🎙';
+    }
+
+    function _sendAudio(chunks) {
+      micBtn.textContent = '⏳';
+      const total = chunks.reduce((s, c) => s + c.length, 0);
+      const pcm   = new Float32Array(total);
+      let off = 0;
+      chunks.forEach(c => { pcm.set(c, off); off += c.length; });
+      const wav = _encodeWAV(pcm, 16000);
+      fetch('/api/transcribe', { method: 'POST', body: wav,
+        headers: { 'Content-Type': 'audio/wav' } })
+        .then(r => r.json())
+        .then(d => {
+          micBtn.textContent = '🎙';
+          if (d.text && d.text.trim()) {
+            inputEl.value = d.text.trim();
+            sendMessage();
+          } else {
+            addMsg('⚠ Não percebi nada. Fala mais perto do microfone e tenta de novo.', 'system');
+          }
+        })
+        .catch(() => {
+          micBtn.textContent = '🎙';
+          addMsg('⚠ Erro ao transcrever. Verifica se o X-ONE está atualizado (git pull + py brain_server.py).', 'system');
+        });
+    }
+
+    window.toggleMic = function() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        addMsg('⚠ Browser não suporta acesso ao microfone.', 'system'); return;
+      }
+      if (listening) { _stopMic(); return; }
+
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(stream => {
+          _micStream = stream;
+          _micCtx    = new AudioContext({ sampleRate: 16000 });
+          _micChunks = [];
+          const src  = _micCtx.createMediaStreamSource(stream);
+          _micProc   = _micCtx.createScriptProcessor(4096, 1, 1);
+          _micProc.onaudioprocess = e => {
+            _micChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+          };
+          src.connect(_micProc);
+          _micProc.connect(_micCtx.destination);
+          listening = true;
+          micBtn.classList.add('listening');
+          micBtn.textContent = '🔴';
+        })
         .catch(err => {
-          addMsg('⚠ Microfone bloqueado: ' + (err.message || err.name) + ' — verifica as permissões do browser.', 'system');
+          addMsg('⚠ Microfone bloqueado: ' + (err.name || err.message) +
+            ' — clica no 🔒 na barra de endereço e permite o microfone.', 'system');
         });
     };
 
-    function _startRecognition() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SR();
-      recognition.lang             = 'pt-BR';   // português do Brasil para melhor reconhecimento
-      recognition.interimResults   = false;
-      recognition.maxAlternatives  = 1;
-      recognition.continuous       = false;
-
-      recognition.onstart = () => {
-        listening = true;
-        micBtn.classList.add('listening');
-        micBtn.textContent = '🔴';
-      };
-      recognition.onend = () => {
-        listening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = '🎙';
-      };
-      recognition.onresult = e => {
-        const transcript = e.results[0][0].transcript;
-        inputEl.value = transcript;
-        sendMessage();
-      };
-      recognition.onerror = e => {
-        listening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = '🎙';
-        const msgs = {
-          'not-allowed':   '⚠ Permissão de microfone negada — clica no ícone 🔒 na barra de endereço e permite o microfone.',
-          'no-speech':     '⚠ Nenhuma voz detetada. Tenta falar mais perto do microfone.',
-          'network':       '⚠ Erro de rede no reconhecimento de voz. Verifica a ligação à internet.',
-          'audio-capture': '⚠ Microfone não encontrado. Verifica se está ligado.',
-          'aborted':       '',  // utilizador cancelou — sem mensagem
-        };
-        const msg = msgs[e.error];
-        if (msg) addMsg(msg, 'system');
-      };
-      recognition.start();
-    }
+    // Ao soltar o botão do microfone, para e envia
+    document.getElementById('mic-btn').addEventListener('mouseup',  () => { if (listening) { const c=[..._micChunks]; _stopMic(); _sendAudio(c); } });
+    document.getElementById('mic-btn').addEventListener('touchend', () => { if (listening) { const c=[..._micChunks]; _stopMic(); _sendAudio(c); } });
 
     // ── Findings Panel ───────────────────────────────────
     let findingsData      = [];
