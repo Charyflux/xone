@@ -550,10 +550,46 @@
     #thinking-bar.active { display: block; }
 
     /* ── Findings Toggle Button ─────────────────────── */
-    #findings-toggle {
+    #top-buttons {
       position: absolute;
       top: 18px;
       right: 18px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 10;
+      pointer-events: all;
+    }
+    #aveone-btn {
+      background: transparent;
+      border: 1px solid #00eeff44;
+      color: #00eeffaa;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    #aveone-btn:hover {
+      border-color: #00eeffaa;
+      color: #00eeff;
+      box-shadow: 0 0 12px #00eeff22;
+    }
+    #aveone-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #333;
+      transition: background .5s;
+      flex-shrink: 0;
+    }
+    #aveone-dot.online  { background: #00ff88; box-shadow: 0 0 6px #00ff8888; }
+    #aveone-dot.offline { background: #ff3333; box-shadow: 0 0 4px #ff333366; }
+    #findings-toggle {
       background: transparent;
       border: 1px solid #aa44ff55;
       color: #aa44ffcc;
@@ -563,8 +599,6 @@
       padding: 6px 14px;
       cursor: pointer;
       transition: all .2s;
-      z-index: 10;
-      pointer-events: all;
     }
     #findings-toggle:hover {
       border-color: #aa44ffaa;
@@ -825,10 +859,15 @@
     <div id="mouseinfo">X: — &nbsp; Y: —</div>
   </div>
 
-  <!-- Findings Toggle -->
-  <button id="findings-toggle" onclick="toggleFindings()">
-    ◈ FINDINGS <span id="findings-badge">0</span>
-  </button>
+  <!-- Top-right button row -->
+  <div id="top-buttons">
+    <button id="aveone-btn" onclick="window.open('https://aveone.com.br/app/','_blank')" title="Abrir AVEONE App — mantém esta aba aberta para sincronizar findings">
+      <span id="aveone-dot"></span>AVEONE APP
+    </button>
+    <button id="findings-toggle" onclick="toggleFindings()">
+      ◈ FINDINGS <span id="findings-badge">0</span>
+    </button>
+  </div>
 
   <!-- Findings Panel -->
   <div id="findings-panel">
@@ -1606,6 +1645,24 @@
       setTimeout(pollFindings, 5000);
     }
     pollFindings();
+
+    // ── AVEONE status indicator ──────────────────────────
+    async function checkAveoneStatus() {
+      const dot = document.getElementById('aveone-dot');
+      if (!dot) return;
+      try {
+        const r = await fetch('/api/aveone/status');
+        const d = await r.json();
+        dot.className = d.connected ? 'online' : 'offline';
+        dot.title = d.connected
+          ? `AVEONE conectada (há ${d.seconds_ago}s)`
+          : 'AVEONE offline — abre e faz login na app';
+      } catch {
+        dot.className = 'offline';
+      }
+    }
+    checkAveoneStatus();
+    setInterval(checkAveoneStatus, 15000);
 
     // ── AVEONE URL param — auto-analisa ao arrancar ──────
     (function() {

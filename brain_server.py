@@ -151,6 +151,7 @@ Quando recebes um finding do scanner AVEONE:
 
 chat_history: list = []
 findings_store: list = []
+aveone_last_ping: float = 0.0   # epoch seconds of last ping from AVEONE panel
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
@@ -408,6 +409,27 @@ async def get_report():
         ]
     report_text = "\n".join(l for l in lines if l is not None)
     return JSONResponse({"report": report_text, "count": len(findings_store)})
+
+
+@app.post("/api/aveone/ping")
+async def aveone_ping():
+    """AVEONE panel calls this every 30 s to signal it is open and authenticated."""
+    global aveone_last_ping
+    import time
+    aveone_last_ping = time.time()
+    return {"ok": True}
+
+
+@app.get("/api/aveone/status")
+async def aveone_status():
+    """Returns whether the AVEONE panel is currently open and authenticated."""
+    import time
+    age = time.time() - aveone_last_ping if aveone_last_ping else None
+    connected = age is not None and age < 90   # miss 2 polls = offline
+    return {
+        "connected":  connected,
+        "seconds_ago": round(age, 1) if age is not None else None,
+    }
 
 
 @app.get("/health")
