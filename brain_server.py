@@ -451,6 +451,7 @@ async def health():
 
 # ── Entry point ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    import threading, webbrowser
     print(f"""
   ╔══════════════════════════════════════════╗
   ║   X-ONE v3.0                              ║
@@ -458,6 +459,8 @@ if __name__ == "__main__":
   ║   Modelo : {OLLAMA_MODEL:<30}║
   ╚══════════════════════════════════════════╝
 """)
+    # Abre o browser 1.5s depois de arrancar (tempo para o servidor iniciar)
+    threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     uvicorn.run(
         "brain_server:app",
         host="0.0.0.0",
