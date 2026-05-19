@@ -6,6 +6,8 @@
   <title>X-ONE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -416,18 +418,30 @@
       bottom: 70px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(700px, 90vw);
+      width: min(820px, 88vw);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 150px);
       z-index: 10;
       pointer-events: all;
     }
 
+    #chat-main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: rgba(3,0,18,0.72);
+      border: 1px solid #aa44ff22;
+      backdrop-filter: blur(14px);
+    }
+
     #chat-messages {
-      max-height: 220px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 0 4px 10px;
+      padding: 12px 10px;
+      max-height: calc(100vh - 260px);
       scrollbar-width: thin;
       scrollbar-color: #aa44ff33 transparent;
     }
@@ -475,15 +489,78 @@
       padding: 2px 0;
     }
 
+    /* ── Código nas respostas ─────────────────────────── */
+    .msg-content { white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+    .msg-content strong { color: #ffffff; }
+    .msg-content br { display: block; content: ''; margin: 0; }
+    .msg-content pre.code-block {
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #aa44ff44;
+      border-left: 3px solid #aa44ff;
+      overflow-x: auto;
+      font-size: 11px;
+      background: #0d1117;
+    }
+    .msg-content pre.code-block .hljs { background: #0d1117; padding: 14px 16px; }
+    .msg-content .lang-label {
+      display: block;
+      background: #1a1a2e;
+      color: #aa44ff;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 3px 12px;
+      border-bottom: 1px solid #aa44ff33;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .msg-content code.inline-code {
+      background: #1a1a2e;
+      color: #00eeff;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+    }
+
+    #paste-preview {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-top: 1px solid #aa44ff33;
+      background: rgba(170,68,255,.05);
+    }
+    #paste-preview.active { display: flex; }
+    #paste-preview img {
+      max-height: 54px;
+      max-width: 96px;
+      border-radius: 4px;
+      border: 1px solid #aa44ff55;
+      object-fit: cover;
+    }
+    #paste-preview .paste-label {
+      font-size: 9px;
+      color: #aa44ff;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px;
+      flex: 1;
+    }
+    #paste-preview .paste-rm {
+      color: #ff3366;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 2px 4px;
+    }
+    #paste-preview .paste-rm:hover { opacity: .7; }
+
     #chat-input-row {
       display: flex;
       gap: 8px;
       align-items: center;
-      background: rgba(3,0,18,0.85);
-      border: 1px solid #aa44ff33;
-      border-top: 1px solid #aa44ff55;
+      border-top: 1px solid #aa44ff44;
       padding: 8px 10px;
-      backdrop-filter: blur(12px);
+      flex-shrink: 0;
     }
 
     #chat-prompt {
@@ -524,6 +601,9 @@
       border-color: #aa44ffaa;
       color: #fff;
     }
+    .chat-btn.stop { border-color: #ff3366aa; color: #ff3366; box-shadow: 0 0 8px #ff336633; display: none; }
+    .chat-btn.stop:hover { background: rgba(255,51,102,.18); border-color: #ff3366; box-shadow: 0 0 14px #ff336655; color: #fff; }
+    .chat-btn.stop.active { display: inline-block; }
     .chat-btn.mic { border-color: #00eeffaa; color: #00eeff; box-shadow: 0 0 8px #00eeff33; }
     .chat-btn.mic:hover { background: rgba(0,238,255,.18); border-color: #00eeff; box-shadow: 0 0 14px #00eeff55; }
     .chat-btn.mic.listening {
@@ -537,17 +617,77 @@
       50%      { opacity: .4; }
     }
 
-    #thinking-bar {
+    #thinking-bar { display: none; }
+
+    /* ── Node Tooltip ───────────────────────────────── */
+    #node-tooltip {
       display: none;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #aa44ff, #00eeff, transparent);
-      animation: thinkScan 1.2s linear infinite;
+      position: fixed;
+      background: rgba(3,0,18,0.94);
+      border: 1px solid #aa44ff44;
+      border-radius: 3px;
+      padding: 10px 14px;
+      font-family: 'Share Tech Mono', monospace;
+      pointer-events: none;
+      z-index: 25;
+      backdrop-filter: blur(14px);
+      max-width: 230px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
-    @keyframes thinkScan {
-      0%   { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+    #node-tooltip.show { display: block; }
+    #node-tooltip .nt-sev  { font-size: 7px; letter-spacing: 2.5px; margin-bottom: 5px; }
+    #node-tooltip .nt-type { font-size: 11px; font-weight: 700; margin-bottom: 4px; color: #e0d0ff; }
+    #node-tooltip .nt-url  { font-size: 8px; color: #445566; word-break: break-all; margin-bottom: 6px; }
+    #node-tooltip .nt-hint { font-size: 7px; color: #334455; letter-spacing: 1.5px; border-top: 1px solid #aa44ff22; padding-top: 5px; }
+
+    .msg.thinking {
+      align-self: flex-start;
+      background: rgba(170,68,255,0.05);
+      border: 1px solid #aa44ff22;
+      color: #aa44ff99;
+      border-left: 2px solid #aa44ff55;
+      font-size: 10px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    #thinking-bar.active { display: block; }
+    .think-dots {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .think-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #aa44ff;
+      display: block;
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+    .think-dots span:nth-child(2) { animation-delay: .2s; }
+    .think-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+      40%           { transform: scale(1.2); opacity: 1;   }
+    }
+
+    /* Pontos de "a escrever" na bolha do bot */
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+    }
+    .typing-indicator span {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #aa44ff88;
+      display: inline-block;
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: .2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: .4s; }
 
     /* ── Findings Toggle Button ─────────────────────── */
     #top-buttons {
@@ -666,6 +806,21 @@
     .fp-btn:hover { border-color: #aa44ffaa; color: #fff; }
     .fp-btn.report { border-color: #00eeff44; color: #00eeff; }
     .fp-btn.report:hover { border-color: #00eeffaa; box-shadow: 0 0 10px #00eeff33; }
+    .fp-btn.analyze-all {
+      border-color: #ff880044;
+      color: #ff8800;
+      font-weight: 700;
+    }
+    .fp-btn.analyze-all:hover {
+      border-color: #ff8800aa;
+      box-shadow: 0 0 10px #ff880033;
+      background: rgba(255,136,0,0.08);
+    }
+    .fp-btn.analyze-all.running {
+      border-color: #ff8800aa;
+      color: #ff8800;
+      animation: thinkPulse 1s ease-in-out infinite;
+    }
 
     #findings-list {
       flex: 1;
@@ -747,67 +902,91 @@
       text-align: center;
       font-family: 'Share Tech Mono', monospace;
       font-size: 7px;
-      letter-spacing: 1px;
-      padding: 4px;
+      letter-spacing: 1.5px;
+      padding: 6px 4px;
       border: 1px solid transparent;
       border-radius: 2px;
     }
-    .fp-stat .sn { font-size: 11px; font-weight: 700; display: block; margin-bottom: 2px; }
-    .stat-c { border-color: #ff333322; }
-    .stat-c .sn { color: #ff5555; }
-    .stat-h { border-color: #ff660022; }
-    .stat-h .sn { color: #ff8833; }
-    .stat-m { border-color: #ffaa0022; }
-    .stat-m .sn { color: #ffcc22; }
-    .stat-l { border-color: #00eeff22; }
-    .stat-l .sn { color: #00eeff; }
+    .fp-stat .sn { font-size: 13px; font-weight: 700; display: block; margin-bottom: 4px; }
+    .stat-c { border-color: #ff333344; background: rgba(255,51,51,.06); }
+    .stat-c .sn  { color: #ff5555; text-shadow: 0 0 8px #ff333366; }
+    .stat-c .sl  { color: #ff5555bb; }
+    .stat-h { border-color: #ff660044; background: rgba(255,102,0,.06); }
+    .stat-h .sn  { color: #ff8833; text-shadow: 0 0 8px #ff660066; }
+    .stat-h .sl  { color: #ff8833bb; }
+    .stat-m { border-color: #ffaa0044; background: rgba(255,170,0,.06); }
+    .stat-m .sn  { color: #ffcc22; text-shadow: 0 0 8px #ffaa0066; }
+    .stat-m .sl  { color: #ffcc22bb; }
+    .stat-l { border-color: #00eeff44; background: rgba(0,238,255,.04); }
+    .stat-l .sn  { color: #00eeff; text-shadow: 0 0 8px #00eeff55; }
+    .stat-l .sl  { color: #00eeffbb; }
 
     /* ── Model Switcher ─────────────────────────────── */
     #model-switcher {
+      position: fixed;
+      top: 18px;
+      left: 18px;
       display: flex;
-      gap: 6px;
-      padding: 6px 10px;
-      background: rgba(3,0,18,0.75);
-      border: 1px solid #aa44ff22;
-      border-bottom: none;
-      backdrop-filter: blur(12px);
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 8px;
+      background: rgba(3,0,18,0.88);
+      border: 1px solid #aa44ff33;
+      backdrop-filter: blur(18px);
+      width: 96px;
+      z-index: 10;
+      pointer-events: all;
     }
     .model-btn {
-      flex: 1;
-      background: transparent;
-      border: 1px solid #aa44ff55;
-      color: #aa44ffcc;
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: rgba(170,68,255,0.06);
+      border: 1px solid #aa44ff44;
+      color: #aa44ffaa;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 8px;
-      padding: 5px 8px;
+      font-size: 7px;
+      padding: 14px 6px 12px;
       cursor: pointer;
       letter-spacing: 1.5px;
       transition: all .25s;
       text-transform: uppercase;
+      text-align: center;
+      border-radius: 2px;
     }
-    .model-btn:hover { border-color: #aa44ffaa; color: #cc88ff; }
+    .model-btn .mb-icon { font-size: 20px; line-height: 1; display: block; }
+    .model-btn .mb-text { display: block; line-height: 1.5; }
+    .model-btn:hover {
+      background: rgba(170,68,255,0.14);
+      border-color: #aa44ffaa;
+      color: #cc88ff;
+      box-shadow: 0 0 14px #aa44ff22;
+    }
     .model-btn.active-hack {
-      background: rgba(255,60,60,0.12);
-      border-color: #ff4444cc;
-      color: #ff8888;
-      text-shadow: 0 0 10px #ff444488;
-      box-shadow: 0 0 10px #ff333322;
+      background: rgba(255,51,51,0.12);
+      border-color: #ff4444bb;
+      color: #ff7777;
+      text-shadow: 0 0 10px #ff444466;
+      box-shadow: 0 0 16px #ff333322, inset 0 0 10px #ff333311;
     }
     .model-btn.active-fast {
       background: rgba(0,238,255,0.10);
-      border-color: #00eeffcc;
+      border-color: #00eeffbb;
       color: #00eeff;
-      text-shadow: 0 0 10px #00eeff88;
-      box-shadow: 0 0 10px #00eeff22;
+      text-shadow: 0 0 10px #00eeff66;
+      box-shadow: 0 0 16px #00eeff22, inset 0 0 10px #00eeff0d;
     }
     #model-label {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 7px;
-      color: #33224488;
-      letter-spacing: 2px;
-      align-self: center;
-      white-space: nowrap;
-      padding-right: 4px;
+      font-size: 6px;
+      color: #33224466;
+      letter-spacing: 3px;
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #aa44ff18;
+      text-transform: uppercase;
     }
   </style>
 </head>
@@ -823,6 +1002,12 @@
   </div>
 
   <canvas id="jc"></canvas>
+  <div id="node-tooltip">
+    <div class="nt-sev"  id="nt-sev"></div>
+    <div class="nt-type" id="nt-type"></div>
+    <div class="nt-url"  id="nt-url"></div>
+    <div class="nt-hint">⚡ CLICA PARA ANALISAR</div>
+  </div>
 
   <div id="hud">
     <div id="arc1" class="arc"></div>
@@ -873,43 +1058,55 @@
   <div id="findings-panel">
     <div class="fp-header">
       <span class="fp-title">◈ VULNERABILIDADES · AVEONE</span>
+      <button class="fp-btn analyze-all" id="btn-analyze-all" onclick="analyzeAll()">▶ ANALISAR TUDO</button>
       <button class="fp-btn report" onclick="generateReport()">⚡ REPORT</button>
       <button class="fp-btn" onclick="clearFindingsUI()">CLR</button>
       <button class="fp-btn" onclick="toggleFindings()">✕</button>
     </div>
     <div class="fp-stats">
-      <div class="fp-stat stat-c"><span class="sn" id="sc-c">0</span>CRITICAL</div>
-      <div class="fp-stat stat-h"><span class="sn" id="sc-h">0</span>HIGH</div>
-      <div class="fp-stat stat-m"><span class="sn" id="sc-m">0</span>MEDIUM</div>
-      <div class="fp-stat stat-l"><span class="sn" id="sc-l">0</span>LOW</div>
+      <div class="fp-stat stat-c"><span class="sn" id="sc-c">0</span><span class="sl">CRITICAL</span></div>
+      <div class="fp-stat stat-h"><span class="sn" id="sc-h">0</span><span class="sl">HIGH</span></div>
+      <div class="fp-stat stat-m"><span class="sn" id="sc-m">0</span><span class="sl">MEDIUM</span></div>
+      <div class="fp-stat stat-l"><span class="sn" id="sc-l">0</span><span class="sl">LOW</span></div>
     </div>
     <div id="findings-list">
       <div id="findings-empty">SEM VULNERABILIDADES<br><br>AGUARDANDO SCANNERS AVEONE</div>
     </div>
   </div>
 
+  <!-- Model Switcher — canto superior esquerdo -->
+  <div id="model-switcher">
+    <span id="model-label">MODELO</span>
+    <button class="model-btn" id="btn-hack"
+            onclick="selectModel('dolphin-llama3','hack')">
+      <span class="mb-icon">☠</span>
+      <span class="mb-text">SEM FILTROS</span>
+    </button>
+    <button class="model-btn active-fast" id="btn-fast"
+            onclick="selectModel('llama3.2','fast')">
+      <span class="mb-icon">⚡</span>
+      <span class="mb-text">MODO RÁPIDO</span>
+    </button>
+  </div>
+
   <!-- Chat Panel -->
   <div id="chat-panel">
-    <div id="model-switcher">
-      <span id="model-label">MODELO</span>
-      <button class="model-btn" id="btn-hack"
-              onclick="selectModel('dolphin-llama3','hack')">
-        ☠ SEM FILTROS
-      </button>
-      <button class="model-btn active-fast" id="btn-fast"
-              onclick="selectModel('llama3.2','fast')">
-        ⚡ MODO RÁPIDO
-      </button>
-    </div>
-    <div id="chat-messages">
-    </div>
-    <div id="thinking-bar"></div>
-    <div id="chat-input-row">
-      <span id="chat-prompt">X-ONE://&gt;</span>
-      <input id="chat-input" type="text" placeholder="pergunta ou usa o microfone..." autocomplete="off"/>
-      <button class="chat-btn mic" id="mic-btn" onclick="toggleMic()">🎙</button>
-      <button class="chat-btn" onclick="sendMessage()">ENVIAR</button>
-      <button class="chat-btn" onclick="clearChat()">CLR</button>
+    <div id="chat-main">
+      <div id="chat-messages"></div>
+      <div id="thinking-bar"></div>
+      <div id="paste-preview">
+        <img id="paste-img" src="" alt="img"/>
+        <span class="paste-label">🖼 imagem pronta para enviar</span>
+        <span class="paste-rm" onclick="clearPastedImage()">✕</span>
+      </div>
+      <div id="chat-input-row">
+        <span id="chat-prompt">X-ONE://&gt;</span>
+        <input id="chat-input" type="text" placeholder="pergunta ou usa o microfone..." autocomplete="off"/>
+        <button class="chat-btn mic" id="mic-btn" onclick="toggleMic()">🎙</button>
+        <button class="chat-btn" onclick="sendMessage()">ENVIAR</button>
+        <button class="chat-btn stop" id="stop-btn" onclick="stopGeneration()">■ PARAR</button>
+        <button class="chat-btn" onclick="clearChat()">CLR</button>
+      </div>
     </div>
   </div>
 
@@ -998,6 +1195,16 @@
       return `rgba(${c.r},${c.g},${c.b},${a})`;
     }
 
+    const SEV_COL = {
+      Critical: { r: 255, g: 51,  b: 51  },
+      High:     { r: 255, g: 136, b: 51  },
+      Medium:   { r: 255, g: 204, b: 34  },
+      Low:      { r: 0,   g: 238, b: 255 },
+    };
+    const SEV_HEX = {
+      Critical: '#ff3333', High: '#ff8833', Medium: '#ffcc22', Low: '#00eeff',
+    };
+
     const canvas = document.getElementById('jc');
     const ctx    = canvas.getContext('2d');
 
@@ -1009,6 +1216,28 @@
     let burstMode  = false;
     let burstTimer = 0;
     let waveMode   = false;
+
+    let findingNodes = []; // { node, finding }
+
+    function attachFindingToNode(finding) {
+      if (findingNodes.find(fn => fn.finding.id === finding.id)) return;
+      const used = new Set(findingNodes.map(fn => fn.node));
+      const pool = nodes.filter(n => !used.has(n));
+      if (!pool.length) return;
+      const node = pool[Math.floor(Math.random() * pool.length)];
+      node.finding      = finding;
+      node.findingPulse = Math.random() * Math.PI * 2;
+      findingNodes.push({ node, finding });
+      // burst from that node to draw attention
+      const near = nodes.filter(n => n !== node && Math.hypot(n.x - node.x, n.y - node.y) < CFG.connDist);
+      near.slice(0, 4).forEach(n => { if (signals.length < CFG.maxSignals) signals.push(new Signal(node, n)); });
+    }
+    window.attachFindingToNode = attachFindingToNode;
+
+    window.clearFindingNodes = function() {
+      findingNodes.forEach(fn => { fn.node.finding = null; fn.node.findingPulse = 0; });
+      findingNodes = [];
+    };
     let waveX      = 0;
     let waveDir    = 1;
     const mouse  = { x: -9999, y: -9999 };
@@ -1025,9 +1254,11 @@
         this.phase  = Math.random() * Math.PI * 2;
         this.pSpeed = 0.018 + Math.random() * 0.028;
         this.alpha  = 0.55 + Math.random() * 0.45;
-        this.active = false;
-        this.sigT   = 40 + Math.random() * 110;
-        this.col    = gradColor(Math.random());
+        this.active       = false;
+        this.sigT         = 40 + Math.random() * 110;
+        this.col          = gradColor(Math.random());
+        this.finding      = null;
+        this.findingPulse = 0;
       }
 
       update() {
@@ -1091,6 +1322,51 @@
         ctx.beginPath(); ctx.arc(this.x, this.y, this.r * .36, 0, Math.PI * 2);
         ctx.fillStyle = '#fff'; ctx.fill();
         ctx.restore();
+
+        // ── Finding overlay ──────────────────────────
+        if (this.finding) {
+          const fc = SEV_COL[this.finding.severity] || { r: 170, g: 68, b: 255 };
+          this.findingPulse += 0.055;
+          const pulse = Math.sin(this.findingPulse) * 0.5 + 0.5;
+
+          ctx.save();
+          // outer glow halo
+          const gf = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 9);
+          gf.addColorStop(0, `rgba(${fc.r},${fc.g},${fc.b},${0.35 + pulse * 0.3})`);
+          gf.addColorStop(1, 'transparent');
+          ctx.globalAlpha = 1;
+          ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 9, 0, Math.PI * 2);
+          ctx.fillStyle = gf; ctx.fill();
+
+          // pulsing ring
+          ctx.globalAlpha = 0.5 + pulse * 0.5;
+          ctx.strokeStyle = `rgba(${fc.r},${fc.g},${fc.b},1)`;
+          ctx.lineWidth   = 1.5;
+          ctx.shadowBlur  = 12;
+          ctx.shadowColor = `rgba(${fc.r},${fc.g},${fc.b},0.8)`;
+          ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 2.8 + pulse * 2, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // core dot override
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
+          ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 1.4, 0, Math.PI * 2);
+          ctx.fillStyle = `rgb(${fc.r},${fc.g},${fc.b})`; ctx.fill();
+
+          // label text
+          ctx.shadowBlur  = 8;
+          ctx.shadowColor = `rgba(${fc.r},${fc.g},${fc.b},0.9)`;
+          ctx.globalAlpha = 0.75 + pulse * 0.25;
+          ctx.font        = `700 9px 'Share Tech Mono', monospace`;
+          ctx.fillStyle   = `rgb(${fc.r},${fc.g},${fc.b})`;
+          const lbl = (this.finding.vuln_type || 'VULN').substring(0, 20).toUpperCase();
+          ctx.fillText(lbl, this.x + this.r * 3.5 + 4, this.y - 3);
+          ctx.font      = `7px 'Share Tech Mono', monospace`;
+          ctx.fillStyle = `rgba(${fc.r},${fc.g},${fc.b},0.55)`;
+          ctx.fillText('[' + (this.finding.severity || '').toUpperCase() + ']',
+                       this.x + this.r * 3.5 + 4, this.y + 9);
+          ctx.restore();
+        }
       }
     }
 
@@ -1172,6 +1448,10 @@
       W = canvas.width  = window.innerWidth;
       H = canvas.height = window.innerHeight;
       nodes = Array.from({ length: CFG.nodeCount }, () => new Node());
+      // Re-attach findings to new nodes after resize
+      const saved = findingNodes.map(fn => fn.finding);
+      findingNodes = [];
+      saved.forEach(f => attachFindingToNode(f));
       arcDecos = [
         new ArcDeco(Math.min(W, H) * .30, .007,  0.0, 10),
         new ArcDeco(Math.min(W, H) * .21, .011,  1.0,  8),
@@ -1183,15 +1463,54 @@
 
     window.addEventListener('resize', init);
 
+    const _tooltip = document.getElementById('node-tooltip');
+    const _ntSev   = document.getElementById('nt-sev');
+    const _ntType  = document.getElementById('nt-type');
+    const _ntUrl   = document.getElementById('nt-url');
+
     window.addEventListener('mousemove', e => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
       document.getElementById('mouseinfo').textContent =
         `X: ${Math.round(e.clientX)} · Y: ${Math.round(e.clientY)}`;
+
+      // Tooltip for finding nodes
+      const hovered = findingNodes.find(fn =>
+        Math.hypot(fn.node.x - e.clientX, fn.node.y - e.clientY) < fn.node.r * 9
+      );
+      if (hovered) {
+        const f  = hovered.finding;
+        const hx = SEV_HEX[f.severity] || '#aa44ff';
+        _tooltip.classList.add('show');
+        _tooltip.style.borderColor = hx + '66';
+        _tooltip.style.left = Math.min(e.clientX + 18, window.innerWidth - 250) + 'px';
+        _tooltip.style.top  = Math.max(e.clientY - 14, 10) + 'px';
+        _ntSev.textContent  = '◈ ' + (f.severity || '').toUpperCase();
+        _ntSev.style.color  = hx;
+        _ntType.textContent = f.vuln_type || '';
+        _ntUrl.textContent  = f.url || '';
+        canvas.style.cursor = 'pointer';
+      } else {
+        _tooltip.classList.remove('show');
+        canvas.style.cursor = '';
+      }
     });
-    window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('mouseleave', () => {
+      mouse.x = -9999; mouse.y = -9999;
+      _tooltip.classList.remove('show');
+    });
 
     canvas.addEventListener('click', e => {
+      // Finding node click → analyze
+      const clickedFinding = findingNodes.find(fn =>
+        Math.hypot(fn.node.x - e.clientX, fn.node.y - e.clientY) < fn.node.r * 9
+      );
+      if (clickedFinding) {
+        _tooltip.classList.remove('show');
+        if (typeof window.analyzeFinding === 'function') window.analyzeFinding(clickedFinding.finding.id);
+        return;
+      }
+
       const clicked = nodes.find(n => Math.hypot(n.x - e.clientX, n.y - e.clientY) < n.r * 5);
       if (clicked) {
         const near = nodes.filter(n => n !== clicked && Math.hypot(n.x - clicked.x, n.y - clicked.y) < CFG.connDist);
@@ -1372,7 +1691,6 @@
     const messagesEl = document.getElementById('chat-messages');
     const inputEl    = document.getElementById('chat-input');
     const micBtn     = document.getElementById('mic-btn');
-    const thinkBar   = document.getElementById('thinking-bar');
     let recognition  = null;
     let listening    = false;
 
@@ -1412,17 +1730,135 @@
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function setThinking(on) {
-      thinkBar.classList.toggle('active', on);
-      inputEl.disabled = on;
+    function renderMarkdown(raw) {
+      // Divide em blocos de código (completos) e texto normal
+      const parts = raw.split(/(```[\w]*\n[\s\S]*?```)/g);
+      return parts.map(part => {
+        const m = part.match(/^```([\w]*)\n?([\s\S]*)```$/);
+        if (m) {
+          const lang = m[1] || 'plaintext';
+          const code = escapeHtml(m[2].replace(/\n$/, ''));
+          return `<pre class="code-block"><span class="lang-label">${lang || 'code'}</span><code class="language-${lang}">${code}</code></pre>`;
+        }
+        // Texto normal: bold, inline-code, line breaks
+        return escapeHtml(part)
+          .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>')
+          .replace(/\n/g, '<br>');
+      }).join('');
     }
 
-    window.sendMessage = async function() {
+    function highlightNew(el) {
+      el.querySelectorAll('pre.code-block code:not([data-highlighted])').forEach(block => {
+        hljs.highlightElement(block);
+      });
+    }
+
+    const _THINK_PHASES = [
+      '🔍 A pesquisar nas melhores fontes da internet e da dark web...',
+      '📡 Encontrei conteúdo divulgado por hackers, bug hunters e pentesters... a verificar se as informações são válidas...',
+      '✅ Encontrei as melhores informações. A escrever para ti agora...',
+    ];
+    let _thinkingEl  = null;
+    let _thinkTimers = [];
+
+    function _clearThinkTimers() {
+      _thinkTimers.forEach(t => clearTimeout(t));
+      _thinkTimers = [];
+    }
+
+    function setThinking(on) {
+      inputEl.disabled = on;
+      if (on && !_thinkingEl) {
+        _thinkingEl = document.createElement('div');
+        _thinkingEl.className = 'msg thinking';
+        _thinkingEl.innerHTML =
+          '<span class="think-dots"><span></span><span></span><span></span></span>' +
+          '<span class="think-text">' + _THINK_PHASES[0] + '</span>';
+        messagesEl.appendChild(_thinkingEl);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        _thinkTimers.push(setTimeout(() => {
+          if (!_thinkingEl) return;
+          const t = _thinkingEl.querySelector('.think-text');
+          if (t) t.textContent = _THINK_PHASES[1];
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }, 4000));
+      } else if (!on && _thinkingEl) {
+        _clearThinkTimers();
+        _thinkingEl.remove();
+        _thinkingEl = null;
+      }
+    }
+
+    async function _transitionToWriting() {
+      if (!_thinkingEl) return;
+      _clearThinkTimers();
+      const t = _thinkingEl.querySelector('.think-text');
+      if (t) t.textContent = _THINK_PHASES[2];
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      await new Promise(r => setTimeout(r, 1200));
+      if (_thinkingEl) { _thinkingEl.remove(); _thinkingEl = null; }
+    }
+
+    // ── Paste de imagem ──────────────────────────────────
+    let _pastedImage = null; // base64 sem prefixo data:...
+
+    window.clearPastedImage = function() {
+      _pastedImage = null;
+      document.getElementById('paste-preview').classList.remove('active');
+      document.getElementById('paste-img').src = '';
+    };
+
+    document.addEventListener('paste', function(e) {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            _pastedImage = ev.target.result.split(',')[1];
+            document.getElementById('paste-img').src = ev.target.result;
+            document.getElementById('paste-preview').classList.add('active');
+            inputEl.focus();
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    });
+
+    let _abortController = null;
+    const _stopBtn = document.getElementById('stop-btn');
+
+    function _setStopVisible(on) {
+      if (on) _stopBtn.classList.add('active');
+      else _stopBtn.classList.remove('active');
+    }
+
+    window.stopGeneration = function() {
+      if (_abortController) { _abortController.abort(); _abortController = null; }
+    };
+
+    window.sendMessage = async function(opts) {
       const msg = inputEl.value.trim();
       if (!msg) return;
       inputEl.value = '';
-      addMsg(msg, 'user');
+      const displayMsg = (opts && opts.displayMsg) ? opts.displayMsg : msg;
+      addMsg(displayMsg, 'user');
+      if (_pastedImage) {
+        const imgEl = document.createElement('img');
+        imgEl.src = 'data:image/png;base64,' + _pastedImage;
+        imgEl.style.cssText = 'max-width:180px;max-height:120px;border-radius:4px;border:1px solid #aa44ff44;display:block;margin-top:6px;';
+        messagesEl.lastElementChild.appendChild(imgEl);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+      clearPastedImage();
       setThinking(true);
+      _setStopVisible(true);
+
+      _abortController = new AbortController();
 
       // Cria elemento da resposta do bot para preencher progressivamente
       const botEl   = document.createElement('div');
@@ -1431,15 +1867,23 @@
       tagSpan.className = 'tag';
       tagSpan.textContent = '◈ X-ONE';
       botEl.appendChild(tagSpan);
-      const textNode = document.createTextNode('');
-      botEl.appendChild(textNode);
+      // Pontos animados enquanto aguarda o stream
+      const typingEl = document.createElement('span');
+      typingEl.className = 'typing-indicator';
+      typingEl.innerHTML = '<span></span><span></span><span></span>';
+      botEl.appendChild(typingEl);
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'msg-content';
+      botEl.appendChild(contentDiv);
       messagesEl.appendChild(botEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
 
       try {
         const res = await fetch(`${API}/api/chat`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: msg, model: currentModel})
+          body: JSON.stringify({message: msg, model: currentModel, image: _pastedImage || null}),
+          signal: _abortController.signal
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1448,8 +1892,7 @@
         const decoder = new TextDecoder();
         let buffer    = '';
         let fullText  = '';
-
-        setThinking(false);
+        let firstToken = false;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -1465,8 +1908,14 @@
               const data = JSON.parse(line.slice(6));
 
               if (data.token) {
+                if (!firstToken) {
+                  firstToken = true;
+                  typingEl.remove();
+                  _transitionToWriting(); // fase 3 → remove thinking
+                }
                 fullText += data.token;
-                textNode.textContent = fullText;
+                contentDiv.innerHTML = renderMarkdown(fullText);
+                highlightNew(contentDiv);
                 messagesEl.scrollTop = messagesEl.scrollHeight;
               }
 
@@ -1480,12 +1929,21 @@
         }
 
       } catch(e) {
-        setThinking(false);
-        botEl.textContent = '⚠ Erro: ' + e.message;
-        botEl.className = 'msg system';
+        if (e.name === 'AbortError') {
+          typingEl.remove();
+          if (!contentDiv.textContent) botEl.remove();
+        } else {
+          setThinking(false);
+          typingEl.remove();
+          botEl.textContent = '⚠ Erro: ' + e.message;
+          botEl.className = 'msg system';
+        }
       }
 
+      typingEl.remove();
       setThinking(false);
+      _setStopVisible(false);
+      _abortController = null;
     };
 
     window.clearChat = async function() {
@@ -1559,7 +2017,12 @@
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         addMsg('⚠ Browser não suporta acesso ao microfone.', 'system'); return;
       }
-      if (listening) { _stopMic(); return; }
+      if (listening) {
+        const c = [..._micChunks];
+        _stopMic();
+        _sendAudio(c);
+        return;
+      }
 
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(stream => {
@@ -1583,10 +2046,6 @@
         });
     };
 
-    // Ao soltar o botão do microfone, para e envia
-    document.getElementById('mic-btn').addEventListener('mouseup',  () => { if (listening) { const c=[..._micChunks]; _stopMic(); _sendAudio(c); } });
-    document.getElementById('mic-btn').addEventListener('touchend', () => { if (listening) { const c=[..._micChunks]; _stopMic(); _sendAudio(c); } });
-
     // ── Findings Panel ───────────────────────────────────
     let findingsData      = [];
     let findingsPanelOpen = false;
@@ -1596,6 +2055,17 @@
       findingsPanelOpen = !findingsPanelOpen;
       document.getElementById('findings-panel').classList.toggle('open', findingsPanelOpen);
     };
+
+    // Fecha o painel ao clicar fora dele
+    document.addEventListener('click', function(e) {
+      if (!findingsPanelOpen) return;
+      const panel  = document.getElementById('findings-panel');
+      const toggle = document.getElementById('findings-toggle');
+      if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+        findingsPanelOpen = false;
+        panel.classList.remove('open');
+      }
+    });
 
     function sevClass(s) {
       return 'sev-' + (s || 'info').toLowerCase();
@@ -1637,22 +2107,71 @@
       });
     }
 
-    window.analyzeFinding = function(id) {
+    // ── Auto-análise queue ────────────────────────────
+    const _autoAnalyzed = new Set();
+    const _analyzeQueue = [];
+    let   _queueRunning = false;
+
+    async function _processQueue() {
+      if (_queueRunning || _analyzeQueue.length === 0) return;
+      _queueRunning = true;
+      while (_analyzeQueue.length > 0) {
+        const id = _analyzeQueue.shift();
+        await window.analyzeFinding(id, true);
+        if (_analyzeQueue.length > 0) await new Promise(r => setTimeout(r, 600));
+      }
+      _queueRunning = false;
+    }
+
+    window.analyzeFinding = async function(id, fromQueue) {
       const f = findingsData.find(x => x.id === id);
       if (!f) return;
-      findingsPanelOpen = false;
-      document.getElementById('findings-panel').classList.remove('open');
+      if (!fromQueue) {
+        // manual click — close panel
+        findingsPanelOpen = false;
+        document.getElementById('findings-panel').classList.remove('open');
+      }
 
-      const parts = [`[AVEONE FINDING] ${f.vuln_type} detetada pelo scanner ${f.tool}.`];
+      const parts = [`[AVEONE FINDING] ${f.vuln_type} detetada pelo scanner AVEONE Scanner.`];
       if (f.url)      parts.push(`URL alvo: ${f.url}`);
       if (f.param)    parts.push(`Parâmetro: ${f.param}`);
       if (f.payload)  parts.push(`Payload: ${f.payload}`);
       if (f.severity) parts.push(`Severidade: ${f.severity}`);
       if (f.evidence) parts.push(`Evidência: ${f.evidence}`);
       if (f.context)  parts.push(`Contexto: ${f.context}`);
-      parts.push('\nAnalisa esta vulnerabilidade:\n1. Impacto real — o que um atacante pode fazer\n2. PoC completo e funcional para reproduzir\n3. Bypass de WAF se houver filtros\n4. CVSS score estimado com justificação\n5. Template de report profissional para bug bounty');
+      parts.push('\nÉs um top bug hunter. Analisa e responde OBRIGATORIAMENTE com:\n\n1. IMPACTO REAL — o que um atacante consegue fazer de concreto\n2. CVSS v3.1 — score numérico + vector completo + justificação\n3. PoC COMPLETO — script Python ou curl funcional, pronto a copiar e correr, com output esperado quando funciona\n4. VALIDAÇÃO PASSO A PASSO — comandos exatos + output esperado em cada passo para confirmar 100%\n5. BYPASS DE WAF — se existirem filtros, dá 3 payloads alternativos\n6. REPORT BUG BOUNTY — título, CVSS, impacto, passos de reprodução, prova, mitigação, CWE/OWASP\n\nNão dês teoria. Scripts funcionais prontos a usar.');
       inputEl.value = parts.join('\n');
-      sendMessage();
+      const short = `⚡ Analisando: ${f.vuln_type} [${f.severity || '?'}]${f.url ? ' · ' + f.url : ''}`;
+      await sendMessage({ displayMsg: short });
+    };
+
+    window.analyzeAll = function() {
+      if (!findingsData.length) {
+        addMsg('⚠ Sem vulnerabilidades para analisar.', 'system');
+        return;
+      }
+      const btn = document.getElementById('btn-analyze-all');
+      // Queue all findings not yet analyzed
+      let added = 0;
+      findingsData.forEach(f => {
+        if (!_autoAnalyzed.has(f.id)) {
+          _autoAnalyzed.add(f.id);
+          _analyzeQueue.push(f.id);
+          added++;
+        }
+      });
+      if (added === 0) {
+        addMsg('◈ Todas as vulnerabilidades já foram analisadas.', 'system');
+        return;
+      }
+      // Close panel and start
+      findingsPanelOpen = false;
+      document.getElementById('findings-panel').classList.remove('open');
+      if (btn) btn.classList.add('running');
+      addMsg(`▶ A analisar ${added} vulnerabilidade(s) automaticamente...`, 'system');
+      _processQueue().then(() => {
+        if (btn) btn.classList.remove('running');
+      });
     };
 
     window.generateReport = function() {
@@ -1670,18 +2189,24 @@
       const crit = findingsData.filter(f => f.severity === 'Critical').length;
       const high = findingsData.filter(f => f.severity === 'High').length;
 
-      inputEl.value = `Gera um report profissional completo de bug bounty para ${findingsData.length} findings encontrados pela AVEONE (${crit} Critical, ${high} High):\n\n${summary}\n\nPara cada finding inclui:\n- Título profissional\n- Descrição do impacto real\n- CVSS score com vetor\n- Passos de reprodução (step-by-step)\n- Evidência / PoC\n- Recomendação de mitigação\n\nOrdena por severidade (Critical primeiro). Formato markdown.`;
-      sendMessage();
+      inputEl.value = `Gera um report profissional de bug bounty para ${findingsData.length} findings da AVEONE (${crit} Critical, ${high} High):\n\n${summary}\n\nPara CADA finding inclui OBRIGATORIAMENTE:\n- Título técnico e impactante\n- CVSS v3.1 score + vector\n- Impacto real (o que o atacante consegue)\n- Script PoC funcional (Python/curl/bash) pronto a correr\n- Passos de reprodução numerados com output esperado\n- Mitigação técnica concreta\n- Referências CWE/OWASP\n\nOrdem: Critical → High → Medium → Low. Formato markdown profissional.`;
+      sendMessage({ displayMsg: `📋 Gerando report completo · ${findingsData.length} findings (${crit} Critical, ${high} High)` });
     };
 
     window.clearFindingsUI = async function() {
       try { await fetch(`${API}/api/findings`, { method: 'DELETE' }); } catch(e) {}
       findingsData      = [];
       lastFindingsCount = 0;
+      if (typeof window.clearFindingNodes === 'function') window.clearFindingNodes();
+      _autoAnalyzed.clear();
+      _analyzeQueue.length = 0;
+      _queueRunning = false;
       renderFindings();
     };
 
+    let _findingsTimer = null;
     async function pollFindings() {
+      clearTimeout(_findingsTimer);
       try {
         const r = await fetch(`${API}/api/findings`);
         const d = await r.json();
@@ -1696,10 +2221,27 @@
           lastFindingsCount = findingsData.length;
         }
         renderFindings();
+        // Attach each finding to a neural network node
+        findingsData.forEach(f => {
+          if (typeof window.attachFindingToNode === 'function') window.attachFindingToNode(f);
+        });
       } catch(e) {}
-      setTimeout(pollFindings, 5000);
+      _findingsTimer = setTimeout(pollFindings, 5000);
     }
     pollFindings();
+
+    // Re-poll imediatamente quando o utilizador volta a esta aba
+    // (browsers throttle setTimeout em abas de background até ~1/min)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        pollFindings();
+        checkAveoneStatus();
+      }
+    });
+    window.addEventListener('focus', () => {
+      pollFindings();
+      checkAveoneStatus();
+    });
 
     // ── AVEONE status indicator ──────────────────────────
     async function checkAveoneStatus() {
