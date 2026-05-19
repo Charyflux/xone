@@ -862,17 +862,17 @@
   <!-- Top-right button row -->
   <div id="top-buttons">
     <button id="aveone-btn" onclick="window.open('https://aveone.com.br/app/','_blank')" title="Abrir AVEONE App — mantém esta aba aberta para sincronizar findings">
-      <span id="aveone-dot"></span>AVEONE APP
+      <span id="aveone-dot"></span>INTEGRAR COM AVEONE
     </button>
     <button id="findings-toggle" onclick="toggleFindings()">
-      ◈ FINDINGS <span id="findings-badge">0</span>
+      ◈ VULNERABILIDADES <span id="findings-badge">0</span>
     </button>
   </div>
 
   <!-- Findings Panel -->
   <div id="findings-panel">
     <div class="fp-header">
-      <span class="fp-title">◈ FINDINGS · AVEONE</span>
+      <span class="fp-title">◈ VULNERABILIDADES · AVEONE</span>
       <button class="fp-btn report" onclick="generateReport()">⚡ REPORT</button>
       <button class="fp-btn" onclick="clearFindingsUI()">CLR</button>
       <button class="fp-btn" onclick="toggleFindings()">✕</button>
@@ -884,7 +884,7 @@
       <div class="fp-stat stat-l"><span class="sn" id="sc-l">0</span>LOW</div>
     </div>
     <div id="findings-list">
-      <div id="findings-empty">SEM FINDINGS<br><br>AGUARDANDO SCANNERS AVEONE</div>
+      <div id="findings-empty">SEM VULNERABILIDADES<br><br>AGUARDANDO SCANNERS AVEONE</div>
     </div>
   </div>
 
@@ -1496,18 +1496,29 @@
     // ── Microfone (Web Speech Recognition) ──────────────
     window.toggleMic = function() {
       if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        addMsg('⚠ Browser não suporta microfone. Usa Chrome.', 'system');
+        addMsg('⚠ Browser não suporta microfone. Usa Chrome ou Brave.', 'system');
         return;
       }
       if (listening) {
         recognition && recognition.stop();
         return;
       }
+
+      // Pedir permissão explícita antes de iniciar
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => _startRecognition())
+        .catch(err => {
+          addMsg('⚠ Microfone bloqueado: ' + (err.message || err.name) + ' — verifica as permissões do browser.', 'system');
+        });
+    };
+
+    function _startRecognition() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SR();
-      recognition.lang          = 'pt-PT';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+      recognition.lang             = 'pt-BR';   // português do Brasil para melhor reconhecimento
+      recognition.interimResults   = false;
+      recognition.maxAlternatives  = 1;
+      recognition.continuous       = false;
 
       recognition.onstart = () => {
         listening = true;
@@ -1524,13 +1535,22 @@
         inputEl.value = transcript;
         sendMessage();
       };
-      recognition.onerror = () => {
+      recognition.onerror = e => {
         listening = false;
         micBtn.classList.remove('listening');
         micBtn.textContent = '🎙';
+        const msgs = {
+          'not-allowed':   '⚠ Permissão de microfone negada — clica no ícone 🔒 na barra de endereço e permite o microfone.',
+          'no-speech':     '⚠ Nenhuma voz detetada. Tenta falar mais perto do microfone.',
+          'network':       '⚠ Erro de rede no reconhecimento de voz. Verifica a ligação à internet.',
+          'audio-capture': '⚠ Microfone não encontrado. Verifica se está ligado.',
+          'aborted':       '',  // utilizador cancelou — sem mensagem
+        };
+        const msg = msgs[e.error];
+        if (msg) addMsg(msg, 'system');
       };
       recognition.start();
-    };
+    }
 
     // ── Findings Panel ───────────────────────────────────
     let findingsData      = [];
