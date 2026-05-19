@@ -892,13 +892,13 @@
   <div id="chat-panel">
     <div id="model-switcher">
       <span id="model-label">MODELO</span>
-      <button class="model-btn active-hack" id="btn-hack"
+      <button class="model-btn" id="btn-hack"
               onclick="selectModel('dolphin-llama3','hack')">
-        ☠ DOLPHIN · SEM FILTROS
+        ☠ SEM FILTROS
       </button>
-      <button class="model-btn" id="btn-fast"
+      <button class="model-btn active-fast" id="btn-fast"
               onclick="selectModel('llama3.2','fast')">
-        ⚡ LLAMA3.2 · RÁPIDO
+        ⚡ MODO RÁPIDO
       </button>
     </div>
     <div id="chat-messages">
@@ -1377,7 +1377,7 @@
     let listening    = false;
 
     // ── Model switcher ────────────────────────────────
-    let currentModel = 'dolphin-llama3';
+    let currentModel = 'llama3.2';
 
     window.selectModel = function(model, type) {
       currentModel = model;
