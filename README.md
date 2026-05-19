@@ -365,11 +365,38 @@ No topo do chat há dois botões:
 
 ### Microfone
 
-1. Clica no ícone 🎙
+1. Clica no ícone 🎙 — botão fica vermelho 🔴 (a gravar)
 2. Fala a tua pergunta em português
-3. O texto é reconhecido e enviado automaticamente
+3. Clica novamente 🎙 — para a gravação e envia automaticamente
 
-> Requer **Google Chrome** ou Chromium. Não funciona em Firefox.
+> Requer ligação à internet (usa Google STT). Funciona em Chrome, Brave, Edge.
+
+---
+
+### Colar imagem (Ctrl+V)
+
+1. Tira um screenshot de qualquer coisa (Win+Shift+S, ou PrintScreen)
+2. Vai para o X-ONE e prime **Ctrl+V**
+3. Aparece um preview da imagem acima do input
+4. Escreve a tua pergunta (ex: "analisa esta vulnerabilidade") e clica **ENVIAR**
+5. A imagem é enviada junto com o texto
+
+> Para o modelo **ver e descrever** a imagem instala um modelo vision:
+> ```cmd
+> ollama pull llava
+> ```
+
+---
+
+### Parar resposta
+
+Clica em **■ PARAR** (botão vermelho que aparece durante geração) para cancelar a resposta a meio.
+
+---
+
+### Código com syntax highlighting
+
+O X-ONE detecta automaticamente blocos de código nas respostas e aplica **syntax highlighting** colorido com fundo escuro — Python, JavaScript, Bash, SQL, e mais.
 
 ---
 
