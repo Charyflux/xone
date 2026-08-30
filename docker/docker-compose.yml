@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: xone-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_NUM_GPU: 1
+    networks:
+      - xone-network
+    restart: unless-stopped
+
+  xone:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: xone-api
+    ports:
+      - "7777:7777"
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: dolphin-llama3
+      PORT: 7777
+      MAX_HISTORY: 20
+      MAX_TOKENS: 512
+    depends_on:
+      - ollama
+    volumes:
+      - ../reports:/app/reports
+      - ../xone_memory.db:/app/xone_memory.db
+    networks:
+      - xone-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7777/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  xone-network:
+    driver: bridge
