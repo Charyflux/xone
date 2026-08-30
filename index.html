@@ -490,11 +490,10 @@
     }
 
     /* ── Código nas respostas ─────────────────────────── */
-    .msg-content { white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+    .msg-content { white-space: normal; word-break: break-word; line-height: 1.7; display:flex; flex-direction:column; gap:2px; }
     .msg-content strong { color: #ffffff; }
-    .msg-content br { display: block; content: ''; margin: 0; }
     .msg-content pre.code-block {
-      margin: 10px 0;
+      margin: 8px 0;
       border-radius: 6px;
       border: 1px solid #aa44ff44;
       border-left: 3px solid #aa44ff;
@@ -521,6 +520,20 @@
       font-family: 'Share Tech Mono', monospace;
       font-size: 10px;
     }
+    /* ── Markdown extra ── */
+    .md-section { display:flex; align-items:center; gap:8px; margin:10px 0 6px; color:#00e5ff; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1.5px; font-weight:700; }
+    .md-section::before,.md-section::after { content:''; flex:1; height:1px; background:rgba(0,229,255,.2); }
+    .md-h1 { font-size:15px; font-weight:700; color:#fff; margin:8px 0 4px; letter-spacing:.5px; }
+    .md-h2 { font-size:12px; font-weight:700; color:#e2e8f0; margin:6px 0 3px; padding-left:8px; border-left:3px solid #00e5ff; }
+    .md-h3 { font-size:11px; font-weight:600; color:#94a3b8; margin:4px 0 2px; }
+    .md-li { padding:1px 0 1px 4px; color:#cbd5e1; display:flex; gap:6px; }
+    .md-li::before { content:'▸'; color:#00e5ff; flex-shrink:0; }
+    .md-p { margin:2px 0; color:#cbd5e1; }
+    .md-space { height:5px; }
+    .md-tool-call { display:inline-flex; align-items:center; gap:5px; background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.3); color:#a78bfa; padding:2px 8px; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.5px; margin:4px 0; }
+    .md-tool-call::before { content:'⚙'; }
+    .md-tool-out { background:rgba(0,0,0,.5); border-left:2px solid rgba(100,116,139,.4); padding:5px 10px; margin:2px 0 6px; font-family:'Share Tech Mono',monospace; font-size:10px; color:#64748b; overflow-x:auto; white-space:pre-wrap; word-break:break-all; border-radius:0 4px 4px 0; max-height:180px; overflow-y:auto; }
+    .md-blocked { color:#ff6666; font-size:10px; font-family:'Share Tech Mono',monospace; opacity:.7; padding:1px 0; }
 
     #paste-preview {
       display: none;
@@ -767,6 +780,100 @@
       transition: all .2s;
     }
     #history-toggle:hover { border-color: #00eeffaa; color: #00eeff; box-shadow: 0 0 12px #00eeff22; }
+
+    #logout-btn {
+      background: transparent;
+      border: 1px solid rgba(255,55,55,.35);
+      color: rgba(255,100,100,.7);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    #logout-btn:hover { border-color: rgba(255,55,55,.8); color: #ff5555; box-shadow: 0 0 12px rgba(255,55,55,.2); }
+
+    #smartfuzz-btn {
+      background: transparent;
+      border: 1px solid rgba(168,85,247,.4);
+      color: rgba(168,85,247,.8);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 2px;
+      padding: 6px 14px; cursor: pointer; transition: all .2s;
+    }
+    #smartfuzz-btn:hover { border-color: rgba(168,85,247,.9); color: #a855f7; box-shadow: 0 0 12px rgba(168,85,247,.25); }
+    #smartfuzz-btn.active { background: rgba(168,85,247,.12); border-color: rgba(168,85,247,.7); color: #c084fc; }
+
+    #reports-btn {
+      background: rgba(0,238,255,.04); border: 1px solid rgba(0,238,255,.25);
+      color: #00eeff99; border-radius: 6px; padding: 5px 12px; cursor: pointer;
+      font-family: 'Orbitron',monospace; font-size: 9px; letter-spacing: .5px;
+      transition: all .2s;
+    }
+    #reports-btn:hover { border-color: rgba(0,238,255,.7); color: #00eeff; box-shadow: 0 0 12px rgba(0,238,255,.2); }
+    #reports-btn.active { background: rgba(0,238,255,.1); border-color: rgba(0,238,255,.6); color: #00eeff; }
+
+    /* ── Smart Fuzz Panel ───────────────────────────── */
+    #sf-panel {
+      position: fixed; top: 0; right: -360px; width: 340px; height: 100vh;
+      background: rgba(8,6,20,.97); border-left: 1px solid rgba(168,85,247,.2);
+      z-index: 500; transition: right .3s ease; display: flex; flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,.5);
+    }
+    #sf-panel.open { right: 0; }
+    .sf-header { display:flex; align-items:center; justify-content:space-between;
+      padding: 16px 18px; border-bottom: 1px solid rgba(168,85,247,.15); }
+    .sf-title { font-family:'Share Tech Mono',monospace; font-size:11px;
+      color:#a855f7; letter-spacing:2px; }
+    .sf-close { color:rgba(200,200,220,.4); cursor:pointer; font-size:14px; transition:color .2s; }
+    .sf-close:hover { color:#ff5555; }
+    .sf-body { padding:18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex:1; }
+    .sf-label { font-family:'Share Tech Mono',monospace; font-size:9px;
+      color:rgba(168,85,247,.6); letter-spacing:1.5px; }
+    #sf-url {
+      background: rgba(168,85,247,.05); border: 1px solid rgba(168,85,247,.25);
+      border-radius: 6px; color: #e0e0f0; font-family:'Share Tech Mono',monospace;
+      font-size: 10px; padding: 10px 12px; width: 100%; outline: none; transition: border .2s;
+    }
+    #sf-url:focus { border-color: rgba(168,85,247,.6); box-shadow: 0 0 0 2px rgba(168,85,247,.08); }
+    .sf-mode-row { display:flex; align-items:center; gap:10px; }
+    .sf-radio { font-family:'Share Tech Mono',monospace; font-size:9px;
+      color:rgba(168,85,247,.7); cursor:pointer; display:flex; align-items:center; gap:4px; }
+    #sf-max { background:rgba(168,85,247,.06); border:1px solid rgba(168,85,247,.2);
+      border-radius:4px; color:#c084fc; font-family:'Share Tech Mono',monospace;
+      font-size:10px; padding:4px 6px; outline:none; }
+    .sf-run {
+      background: linear-gradient(135deg,#7c3aed,#a855f7);
+      border: none; border-radius: 8px; color: #fff;
+      font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px;
+      padding: 11px; cursor: pointer; transition: opacity .2s;
+    }
+    .sf-run:hover { opacity:.85; }
+    .sf-run:disabled { opacity:.4; cursor:not-allowed; }
+    #sf-status { font-family:'Share Tech Mono',monospace; font-size:9px;
+      color:rgba(168,85,247,.6); min-height:14px; }
+    .sf-result-title { font-family:'Share Tech Mono',monospace; font-size:9px;
+      color:rgba(168,85,247,.5); letter-spacing:1.5px; margin-bottom:8px; }
+    #sf-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+    .sf-chip {
+      background: rgba(168,85,247,.12); border: 1px solid rgba(168,85,247,.35);
+      border-radius: 4px; padding: 4px 10px;
+      font-family:'Share Tech Mono',monospace; font-size:10px; color:#c084fc;
+    }
+    .sf-chip.critical { background:rgba(255,55,55,.1); border-color:rgba(255,55,55,.3); color:#ff7070; }
+    .sf-cmd-label { font-family:'Share Tech Mono',monospace; font-size:9px;
+      color:rgba(0,229,255,.4); letter-spacing:1.5px; margin-bottom:6px; }
+    .sf-cmd {
+      background: rgba(0,0,0,.4); border: 1px solid rgba(0,229,255,.15);
+      border-radius: 6px; padding: 10px 12px;
+      font-family:'Share Tech Mono',monospace; font-size:9px;
+      color: rgba(0,229,255,.8); word-break:break-all; cursor:pointer;
+      transition: border .2s;
+    }
+    .sf-cmd:hover { border-color:rgba(0,229,255,.4); }
+    .sf-copy-hint { font-family:'Share Tech Mono',monospace; font-size:8px;
+      color:rgba(0,229,255,.3); text-align:right; margin-top:4px; }
 
     /* ── Findings Panel ──────────────────────────────── */
     /* ── Sidebar de histórico ──────────────────────────── */
@@ -1165,6 +1272,54 @@
     <button id="history-toggle" onclick="toggleHistory()">
       ◈ HISTÓRICO
     </button>
+    <button id="logout-btn" onclick="xoneLogout()">
+      ⏻ LOGOUT
+    </button>
+    <button id="smartfuzz-btn" onclick="toggleSmartFuzz()" title="Smart Fuzzing — IA sugere extensões e paths">
+      ⬡ SMART FUZZ
+    </button>
+    <button id="reports-btn" onclick="toggleReports()" title="Download relatórios guardados">
+      ↓ REPORTS <span id="reports-badge" style="display:none;background:#00eeff22;border:1px solid #00eeff44;border-radius:8px;padding:0 6px;font-size:10px;color:#00eeff;margin-left:4px">0</span>
+    </button>
+  </div>
+
+  <!-- Reports Modal -->
+  <div id="reports-modal" style="display:none;position:fixed;top:60px;right:16px;width:340px;background:rgba(6,8,24,.97);border:1px solid rgba(0,238,255,.2);border-radius:10px;z-index:9999;box-shadow:0 0 30px rgba(0,238,255,.1);font-family:'JetBrains Mono',monospace">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(0,238,255,.12)">
+      <span style="font-family:'Orbitron',monospace;font-size:11px;color:#00eeff;letter-spacing:1px">↓ RELATÓRIOS</span>
+      <span onclick="toggleReports()" style="cursor:pointer;color:#666;font-size:14px;line-height:1">✕</span>
+    </div>
+    <div id="reports-list" style="max-height:300px;overflow-y:auto;padding:6px 0">
+      <div style="text-align:center;color:#444;font-size:11px;padding:16px">A carregar...</div>
+    </div>
+  </div>
+
+  <!-- Smart Fuzz Panel -->
+  <div id="sf-panel">
+    <div class="sf-header">
+      <span class="sf-title">⬡ SMART FUZZ · IA</span>
+      <span class="sf-close" onclick="toggleSmartFuzz()">✕</span>
+    </div>
+    <div class="sf-body">
+      <div class="sf-label">[ URL ALVO ]</div>
+      <input id="sf-url" type="text" placeholder="https://target.com/admin/FUZZ" autocomplete="off" spellcheck="false">
+      <div class="sf-mode-row">
+        <label class="sf-radio"><input type="radio" name="sfmode" value="extensions" checked> Extensões</label>
+        <label class="sf-radio"><input type="radio" name="sfmode" value="wordlist"> Wordlist</label>
+        <div style="flex:1"></div>
+        <label class="sf-label" style="margin:0">Max:</label>
+        <input id="sf-max" type="number" value="6" min="1" max="20" style="width:44px;text-align:center">
+      </div>
+      <button class="sf-run" id="sf-run-btn" onclick="runSmartFuzz()">▶ ANALISAR COM IA</button>
+      <div id="sf-status"></div>
+      <div id="sf-result" style="display:none">
+        <div class="sf-result-title" id="sf-result-label">EXTENSÕES SUGERIDAS</div>
+        <div id="sf-chips"></div>
+        <div class="sf-cmd-label">COMANDO FFUF</div>
+        <div id="sf-cmd" class="sf-cmd" onclick="copySfCmd()"></div>
+        <div id="sf-copy-hint" class="sf-copy-hint">clica para copiar</div>
+      </div>
+    </div>
   </div>
 
   <!-- History Sidebar -->
@@ -1753,27 +1908,28 @@
       const t = Date.now() - startT;
       const s = Math.floor(t / 1000) % 60;
       const m = Math.floor(t / 60000);
-      document.getElementById('sup').textContent  = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      const _sup = document.getElementById('sup');
+      if (_sup) _sup.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
       document.getElementById('slat').textContent = `${1 + Math.floor(Math.random() * 3)}ms`;
       document.getElementById('ssig').textContent = signals.length;
 
       const hz = 36 + Math.floor(Math.random() * 10);
-      document.getElementById('pfreq').textContent = `${hz} Hz`;
-      document.getElementById('bfreq').style.width = (hz / 60 * 100) + '%';
+      const _pfreq = document.getElementById('pfreq'); if (_pfreq) _pfreq.textContent = `${hz} Hz`;
+      const _bfreq = document.getElementById('bfreq'); if (_bfreq) _bfreq.style.width = (hz / 60 * 100) + '%';
 
       const modes  = ['ANÁLISE','SÍNTESE','APRENDIZAGEM','ALERTA','RAZÃO','PREVISÃO'];
       const modeW  = [55, 70, 85, 40, 65, 75];
       const mi     = Math.floor(frame / 140) % modes.length;
-      document.getElementById('pmode').textContent = modes[mi];
-      document.getElementById('bmode').style.width = modeW[mi] + '%';
+      const _pmode = document.getElementById('pmode'); if (_pmode) _pmode.textContent = modes[mi];
+      const _bmode = document.getElementById('bmode'); if (_bmode) _bmode.style.width = modeW[mi] + '%';
 
       const cpu = 78 + Math.floor(Math.random() * 20);
-      document.getElementById('pcpu').textContent = cpu + '%';
-      document.getElementById('bcpu').style.width = cpu + '%';
+      const _pcpu = document.getElementById('pcpu'); if (_pcpu) _pcpu.textContent = cpu + '%';
+      const _bcpu = document.getElementById('bcpu'); if (_bcpu) _bcpu.style.width = cpu + '%';
 
       const mem = 75 + Math.floor(Math.random() * 16);
-      document.getElementById('pmem').textContent = mem + '%';
-      document.getElementById('bmem').style.width = mem + '%';
+      const _pmem = document.getElementById('pmem'); if (_pmem) _pmem.textContent = mem + '%';
+      const _bmem = document.getElementById('bmem'); if (_bmem) _bmem.style.width = mem + '%';
     }
 
     function loop() {
@@ -1812,7 +1968,7 @@
   <!-- ══ CHAT LOGIC ══════════════════════════════════════ -->
   <script>
   (function() {
-    const API = ''; // mesmo servidor — usa URLs relativas
+    const API = window.location.pathname.startsWith('/app/xone') ? '/app/xone' : '';
     const messagesEl = document.getElementById('chat-messages');
     const inputEl    = document.getElementById('chat-input');
     const micBtn     = document.getElementById('mic-btn');
@@ -1855,21 +2011,72 @@
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    function escInline(s) {
+      // escape HTML então aplica inline markdown
+      return escapeHtml(s)
+        .replace(/\*\*([^*<]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*<]+)\*/g, '<em style="color:#a78bfa">$1</em>')
+        .replace(/`([^`<]+)`/g, '<code class="inline-code">$1</code>');
+    }
+
     function renderMarkdown(raw) {
-      // Divide em blocos de código (completos) e texto normal
-      const parts = raw.split(/(```[\w]*\n[\s\S]*?```)/g);
-      return parts.map(part => {
-        const m = part.match(/^```([\w]*)\n?([\s\S]*)```$/);
-        if (m) {
-          const lang = m[1] || 'plaintext';
-          const code = escapeHtml(m[2].replace(/\n$/, ''));
-          return `<pre class="code-block"><span class="lang-label">${lang || 'code'}</span><code class="language-${lang}">${code}</code></pre>`;
+      // Normaliza: converte \n literal (2 chars) em newline real, por segurança
+      let text = raw.replace(/\\n/g, '\n');
+
+      // Extrai blocos de tool output antes de processar
+      // Formato: [TOOL:name]\n  e  [TOOL_OUT]...[/TOOL_OUT]
+      const segments = [];
+      let remaining = text;
+      const toolPattern = /\[TOOL:([^\]]+)\]\n?([\s\S]*?)\[TOOL_OUT\]([\s\S]*?)\[\/TOOL_OUT\]/g;
+      let lastIdx = 0;
+      let match;
+      while ((match = toolPattern.exec(text)) !== null) {
+        if (match.index > lastIdx) segments.push({type:'text', val: text.slice(lastIdx, match.index)});
+        segments.push({type:'tool', name: match[1], out: match[3].trim()});
+        lastIdx = match.index + match[0].length;
+      }
+      if (lastIdx < text.length) segments.push({type:'text', val: text.slice(lastIdx)});
+
+      return segments.map(seg => {
+        if (seg.type === 'tool') {
+          return `<span class="md-tool-call">${escapeHtml(seg.name)}</span>` +
+                 (seg.out ? `<div class="md-tool-out">${escapeHtml(seg.out)}</div>` : '');
         }
-        // Texto normal: bold, inline-code, line breaks
-        return escapeHtml(part)
-          .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-          .replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>')
-          .replace(/\n/g, '<br>');
+
+        // Bloco de texto: divide em blocos de código e texto normal
+        const parts = seg.val.split(/(```[\w]*\n[\s\S]*?```)/g);
+        return parts.map(part => {
+          // Bloco de código fenced
+          const cm = part.match(/^```([\w]*)\n?([\s\S]*)```$/);
+          if (cm) {
+            const lang = cm[1] || 'plaintext';
+            const code = escapeHtml(cm[2].replace(/\n$/, ''));
+            return `<pre class="code-block"><span class="lang-label">${lang||'code'}</span><code class="language-${lang}">${code}</code></pre>`;
+          }
+
+          // Linha a linha
+          return part.split('\n').map(line => {
+            const t = line.trim();
+            if (!t) return '<div class="md-space"></div>';
+
+            // ━━━ SEÇÃO ━━━
+            if (/^━{2,}/.test(t)) {
+              const title = t.replace(/^━+\s*/, '').replace(/\s*━+$/, '').trim();
+              return title ? `<div class="md-section">${escapeHtml(title)}</div>` : '<hr style="border:none;border-top:1px solid rgba(0,229,255,.15);margin:8px 0">';
+            }
+            // # Headers
+            const hm = t.match(/^(#{1,3})\s+(.+)/);
+            if (hm) return `<div class="md-h${hm[1].length}">${escInline(hm[2])}</div>`;
+            // - / • lista
+            if (/^[-•*]\s+/.test(t)) return `<div class="md-li">${escInline(t.replace(/^[-•*]\s+/, ''))}</div>`;
+            // Numerada: 1. item
+            if (/^\d+\.\s+/.test(t)) return `<div class="md-li">${escInline(t.replace(/^\d+\.\s+/, ''))}</div>`;
+            // [BLOCKED]
+            if (/^\[BLOCKED\]/.test(t)) return `<div class="md-blocked">${escapeHtml(t)}</div>`;
+            // Linha normal
+            return `<div class="md-p">${escInline(line)}</div>`;
+          }).join('');
+        }).join('');
       }).join('');
     }
 
@@ -2044,10 +2251,20 @@
                 messagesEl.scrollTop = messagesEl.scrollHeight;
               }
 
-              if (data.done && data.audio_url) {
-                try {
-                  new Audio(data.audio_url + '?t=' + Date.now()).play().catch(() => {});
-                } catch(e) {}
+              if (data.done) {
+                if (data.audio_url) {
+                  try {
+                    new Audio(data.audio_url + '?t=' + Date.now()).play().catch(() => {});
+                  } catch(e) {}
+                }
+                const notif = document.createElement('div');
+                notif.className = 'msg system';
+                notif.style.cssText = 'text-align:center;color:#0f0;border:1px solid #0f04;background:#0f01;font-size:0.82em;letter-spacing:0.08em;padding:6px 12px;';
+                notif.textContent = '✅ Pesquisa finalizada';
+                messagesEl.appendChild(notif);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                // Auto-refresh reports badge e lista após cada resposta
+                setTimeout(_refreshReportsBadge, 800);
               }
             } catch(e) {}
           }
@@ -2216,7 +2433,7 @@
       let off = 0;
       chunks.forEach(c => { pcm.set(c, off); off += c.length; });
       const wav = _encodeWAV(pcm, 16000);
-      fetch('/api/transcribe', { method: 'POST', body: wav,
+      fetch(`${API}/api/transcribe`, { method: 'POST', body: wav,
         headers: { 'Content-Type': 'audio/wav' } })
         .then(r => r.json())
         .then(d => {
@@ -2275,6 +2492,99 @@
     window.toggleFindings = function() {
       findingsPanelOpen = !findingsPanelOpen;
       document.getElementById('findings-panel').classList.toggle('open', findingsPanelOpen);
+    };
+
+    window.xoneLogout = async function() {
+      try {
+        await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'same-origin' });
+      } catch(e) {}
+      window.location.href = '/app/xone/';
+    };
+
+    // ── Smart Fuzz ──────────────────────────────────────────────────
+    let sfOpen = false;
+    window.toggleSmartFuzz = function() {
+      sfOpen = !sfOpen;
+      document.getElementById('sf-panel').classList.toggle('open', sfOpen);
+      document.getElementById('smartfuzz-btn').classList.toggle('active', sfOpen);
+    };
+
+    window.runSmartFuzz = async function() {
+      const url  = document.getElementById('sf-url').value.trim();
+      const mode = document.querySelector('input[name="sfmode"]:checked').value;
+      const max  = document.getElementById('sf-max').value;
+      const btn  = document.getElementById('sf-run-btn');
+      const status = document.getElementById('sf-status');
+      const result = document.getElementById('sf-result');
+
+      if (!url) { status.textContent = '⚠ Insere uma URL'; return; }
+      if (!url.startsWith('http')) { status.textContent = '⚠ URL deve começar com http'; return; }
+
+      btn.disabled = true;
+      btn.textContent = '▶ ANALISANDO...';
+      status.textContent = '⟳ Claude a analisar headers e tecnologia...';
+      result.style.display = 'none';
+
+      try {
+        const res  = await fetch(`${API}/api/smart-fuzz`, {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ url, mode, max: parseInt(max) })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          status.textContent = '⚠ ' + (data.error || 'Erro desconhecido');
+          btn.disabled = false; btn.textContent = '▶ ANALISAR COM IA';
+          return;
+        }
+
+        // Render results
+        const chips  = document.getElementById('sf-chips');
+        const cmd    = document.getElementById('sf-cmd');
+        const lbl    = document.getElementById('sf-result-label');
+        chips.innerHTML = '';
+
+        const baseUrl = url.includes('FUZZ') ? url : url + 'FUZZ';
+
+        if (mode === 'extensions' && data.extensions) {
+          lbl.textContent = 'EXTENSÕES SUGERIDAS';
+          data.extensions.forEach(ext => {
+            const c = document.createElement('div');
+            c.className = 'sf-chip'; c.textContent = ext; chips.appendChild(c);
+          });
+          cmd.textContent = `ffuf -u ${baseUrl} -w wordlist.txt -e ${data.extensions.join(',')} -mc 200,301,302,403`;
+        } else if (mode === 'wordlist' && data.wordlist) {
+          lbl.textContent = 'PATHS SUGERIDOS';
+          data.wordlist.forEach(p => {
+            const c = document.createElement('div');
+            c.className = 'sf-chip'; c.textContent = p; chips.appendChild(c);
+          });
+          const paths = data.wordlist.join('\\n');
+          cmd.textContent = `echo -e "${paths}" | ffuf -u ${baseUrl} -w - -mc 200,301,302,403`;
+        } else {
+          lbl.textContent = 'RESPOSTA IA';
+          const c = document.createElement('div');
+          c.className = 'sf-chip'; c.textContent = JSON.stringify(data.raw || data); chips.appendChild(c);
+          cmd.textContent = '(sem comando gerado)';
+        }
+
+        const fetched = data.headers_fetched ? '✓ headers obtidos' : '⚠ sem headers (offline?)';
+        status.textContent = `✓ Análise concluída · ${fetched}`;
+        result.style.display = 'block';
+
+      } catch(e) {
+        status.textContent = '⚠ Erro de conexão: ' + e.message;
+      }
+      btn.disabled = false; btn.textContent = '▶ ANALISAR COM IA';
+    };
+
+    window.copySfCmd = function() {
+      const cmd = document.getElementById('sf-cmd').textContent;
+      navigator.clipboard.writeText(cmd).then(() => {
+        document.getElementById('sf-copy-hint').textContent = '✓ copiado!';
+        setTimeout(() => document.getElementById('sf-copy-hint').textContent = 'clica para copiar', 2000);
+      });
     };
 
     // Fecha o painel ao clicar fora dele
@@ -2469,7 +2779,7 @@
       const dot = document.getElementById('aveone-dot');
       if (!dot) return;
       try {
-        const r = await fetch('/api/aveone/status');
+        const r = await fetch(`${API}/api/aveone/status`);
         const d = await r.json();
         dot.className = d.connected ? 'online' : 'offline';
         dot.title = d.connected
@@ -2501,15 +2811,121 @@
     setTimeout(async () => {
       try {
         const r = await fetch(`${API}/health`);
+        if (!r.ok) throw new Error('status ' + r.status);
         const d = await r.json();
-        if (!d.ollama) {
-          addMsg(`⚠ Ollama offline — corre: ollama pull ${d.model || 'dolphin-llama3'}`, 'system');
+        if (d.engine === 'claude' && d.claude_key) {
+          // Claude OK — sem mensagem
+        } else if (!d.ollama) {
+          addMsg(`⚠ Motor AI indisponível — configura ANTHROPIC_API_KEY ou inicia Ollama`, 'system');
         }
       } catch(e) {
-        addMsg('⚠ Backend offline — corre: python3 /root/jarvis/brain_server.py', 'system');
+        addMsg('⚠ Backend X-ONE offline', 'system');
       }
     }, 1500);
 
+  })();
+  </script>
+
+  <!-- ── Reports Download ─────────────────────────────────────────── -->
+  <script>
+  (function() {
+    const API = window.location.pathname.startsWith('/app/xone') ? '/app/xone' : '';
+    var _reportsOpen = false;
+
+    async function _refreshReportsBadge() {
+      try {
+        const r = await fetch(API + '/api/reports');
+        const files = await r.json();
+        const badge = document.getElementById('reports-badge');
+        if (files.length > 0) {
+          badge.textContent = files.length;
+          badge.style.display = 'inline';
+          // Pisca o botão se há relatório novo
+          const btn = document.getElementById('reports-btn');
+          btn.style.boxShadow = '0 0 18px rgba(0,238,255,.5)';
+          setTimeout(() => btn.style.boxShadow = '', 2000);
+        }
+        if (_reportsOpen) loadReports(); // Atualiza lista se painel aberto
+      } catch(e) {}
+    }
+
+    window.toggleReports = function() {
+      _reportsOpen = !_reportsOpen;
+      const modal = document.getElementById('reports-modal');
+      const btn   = document.getElementById('reports-btn');
+      modal.style.display = _reportsOpen ? 'block' : 'none';
+      btn.classList.toggle('active', _reportsOpen);
+      if (_reportsOpen) loadReports();
+    };
+
+    async function loadReports() {
+      const list = document.getElementById('reports-list');
+      list.innerHTML = '<div style="text-align:center;color:#444;font-size:11px;padding:16px">A carregar...</div>';
+      try {
+        const r = await fetch(API + '/api/reports');
+        const files = await r.json();
+        const badge = document.getElementById('reports-badge');
+        if (files.length > 0) {
+          badge.textContent = files.length;
+          badge.style.display = 'inline';
+        }
+        if (!files.length) {
+          list.innerHTML = '<div style="text-align:center;color:#444;font-size:11px;padding:16px">Sem relatórios guardados</div>';
+          return;
+        }
+        list.innerHTML = files.map(function(f, idx) {
+          var kb = (f.size / 1024).toFixed(1);
+          var d  = new Date(f.mtime * 1000).toLocaleString('pt-PT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+          var isNew = (Date.now()/1000 - f.mtime) < 300; // menos de 5 min = NOVO
+          return '<div style="border-bottom:1px solid rgba(255,255,255,.04)">'
+            + '<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;transition:background .15s;cursor:pointer" onclick="toggleReportPreview(' + idx + ')" onmouseover="this.style.background=\'rgba(0,238,255,.04)\'" onmouseout="this.style.background=\'\'">'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="font-size:10px;color:#00eeff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + f.name + '">'
+            + (isNew ? '<span style="background:#00ff8844;border:1px solid #00ff8888;color:#00ff88;font-size:8px;padding:0 4px;border-radius:3px;margin-right:4px;font-family:Orbitron">NOVO</span>' : '')
+            + f.name + '</div>'
+            + '<div style="font-size:9px;color:#444;margin-top:2px">' + d + ' · ' + kb + ' KB</div>'
+            + '</div>'
+            + '<span style="color:#666;font-size:10px;flex-shrink:0" id="rpt-arrow-' + idx + '">▾</span>'
+            + '<a href="' + API + '/api/reports/' + encodeURIComponent(f.name) + '" download="' + f.name + '" onclick="event.stopPropagation()" style="flex-shrink:0;padding:4px 8px;background:rgba(0,238,255,.08);border:1px solid rgba(0,238,255,.3);border-radius:5px;color:#00eeff;font-size:9px;font-family:\'Orbitron\',monospace;text-decoration:none" onmouseover="this.style.background=\'rgba(0,238,255,.2)\'" onmouseout="this.style.background=\'rgba(0,238,255,.08)\'">↓</a>'
+            + '</div>'
+            + '<div id="rpt-preview-' + idx + '" style="display:none;padding:8px 14px 12px;background:rgba(0,0,0,.3);font-family:JetBrains Mono,monospace;font-size:9.5px;color:#94a3b8;white-space:pre-wrap;max-height:260px;overflow-y:auto;border-top:1px solid rgba(255,255,255,.04)" data-url="' + API + '/api/reports/' + encodeURIComponent(f.name) + '">A carregar...</div>'
+            + '</div>';
+        }).join('');
+      } catch(e) {
+        list.innerHTML = '<div style="text-align:center;color:#ff3355;font-size:11px;padding:16px">Erro ao carregar</div>';
+      }
+    }
+
+    var _previewOpen = {};
+    window.toggleReportPreview = async function(idx) {
+      var el = document.getElementById('rpt-preview-' + idx);
+      var arrow = document.getElementById('rpt-arrow-' + idx);
+      if (!el) return;
+      var isOpen = _previewOpen[idx];
+      _previewOpen[idx] = !isOpen;
+      el.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.textContent = isOpen ? '▾' : '▴';
+      if (!isOpen && el.textContent === 'A carregar...') {
+        try {
+          const r = await fetch(el.dataset.url);
+          const txt = await r.text();
+          el.textContent = txt;
+        } catch(e) { el.textContent = 'Erro ao carregar relatório.'; }
+      }
+    };
+
+    // Update badge on load
+    (async function() {
+      try {
+        const r = await fetch(API + '/api/reports');
+        const files = await r.json();
+        if (files.length) {
+          const badge = document.getElementById('reports-badge');
+          badge.textContent = files.length;
+          badge.style.display = 'inline';
+        }
+      } catch(e) {}
+    })();
   })();
   </script>
 </body>

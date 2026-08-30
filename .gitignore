@@ -13,7 +13,13 @@ env/
 
 # Runtime audio (gerado automaticamente)
 reply.mp3
+welcome_jarvis.mp3
 /tmp/
+
+# Dados sensíveis (achados de pentest, histórico de conversas)
+findings.json
+xone_memory.db
+reports/
 
 # Ambiente
 .env
