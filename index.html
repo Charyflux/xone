@@ -1275,52 +1275,8 @@
     <button id="logout-btn" onclick="xoneLogout()">
       ⏻ LOGOUT
     </button>
-    <button id="smartfuzz-btn" onclick="toggleSmartFuzz()" title="Smart Fuzzing — IA sugere extensões e paths">
-      ⬡ SMART FUZZ
-    </button>
-    <button id="reports-btn" onclick="toggleReports()" title="Download relatórios guardados">
-      ↓ REPORTS <span id="reports-badge" style="display:none;background:#00eeff22;border:1px solid #00eeff44;border-radius:8px;padding:0 6px;font-size:10px;color:#00eeff;margin-left:4px">0</span>
-    </button>
   </div>
 
-  <!-- Reports Modal -->
-  <div id="reports-modal" style="display:none;position:fixed;top:60px;right:16px;width:340px;background:rgba(6,8,24,.97);border:1px solid rgba(0,238,255,.2);border-radius:10px;z-index:9999;box-shadow:0 0 30px rgba(0,238,255,.1);font-family:'JetBrains Mono',monospace">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(0,238,255,.12)">
-      <span style="font-family:'Orbitron',monospace;font-size:11px;color:#00eeff;letter-spacing:1px">↓ RELATÓRIOS</span>
-      <span onclick="toggleReports()" style="cursor:pointer;color:#666;font-size:14px;line-height:1">✕</span>
-    </div>
-    <div id="reports-list" style="max-height:300px;overflow-y:auto;padding:6px 0">
-      <div style="text-align:center;color:#444;font-size:11px;padding:16px">A carregar...</div>
-    </div>
-  </div>
-
-  <!-- Smart Fuzz Panel -->
-  <div id="sf-panel">
-    <div class="sf-header">
-      <span class="sf-title">⬡ SMART FUZZ · IA</span>
-      <span class="sf-close" onclick="toggleSmartFuzz()">✕</span>
-    </div>
-    <div class="sf-body">
-      <div class="sf-label">[ URL ALVO ]</div>
-      <input id="sf-url" type="text" placeholder="https://target.com/admin/FUZZ" autocomplete="off" spellcheck="false">
-      <div class="sf-mode-row">
-        <label class="sf-radio"><input type="radio" name="sfmode" value="extensions" checked> Extensões</label>
-        <label class="sf-radio"><input type="radio" name="sfmode" value="wordlist"> Wordlist</label>
-        <div style="flex:1"></div>
-        <label class="sf-label" style="margin:0">Max:</label>
-        <input id="sf-max" type="number" value="6" min="1" max="20" style="width:44px;text-align:center">
-      </div>
-      <button class="sf-run" id="sf-run-btn" onclick="runSmartFuzz()">▶ ANALISAR COM IA</button>
-      <div id="sf-status"></div>
-      <div id="sf-result" style="display:none">
-        <div class="sf-result-title" id="sf-result-label">EXTENSÕES SUGERIDAS</div>
-        <div id="sf-chips"></div>
-        <div class="sf-cmd-label">COMANDO FFUF</div>
-        <div id="sf-cmd" class="sf-cmd" onclick="copySfCmd()"></div>
-        <div id="sf-copy-hint" class="sf-copy-hint">clica para copiar</div>
-      </div>
-    </div>
-  </div>
 
   <!-- History Sidebar -->
   <div id="history-sidebar">
