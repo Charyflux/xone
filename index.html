@@ -455,7 +455,8 @@
       padding: 8px 14px;
       border-radius: 2px;
       max-width: 92%;
-      word-break: break-word;
+      overflow-wrap: break-word;
+      word-break: normal;
       white-space: pre-wrap;
     }
     .msg.user {
@@ -479,6 +480,21 @@
       display: block;
       margin-bottom: 4px;
     }
+    .msg.bot .tag .model-badge {
+      color: #7a6a9a;
+      letter-spacing: 1px;
+      font-size: 7px;
+      padding-left: 4px;
+      text-transform: uppercase;
+    }
+    .regen-btn {
+      margin-left: 12px;
+      background: rgba(0,238,255,0.10); border: 1px solid #00eeff44;
+      color: #00eeff; font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: .5px; padding: 3px 10px; border-radius: 3px; cursor: pointer;
+      transition: all .18s;
+    }
+    .regen-btn:hover { background: rgba(0,238,255,0.22); box-shadow: 0 0 10px #00eeff33; }
     .msg.system {
       align-self: center;
       font-size: 9px;
@@ -490,8 +506,8 @@
     }
 
     /* ── Código nas respostas ─────────────────────────── */
-    .msg-content { white-space: normal; word-break: break-word; line-height: 1.7; display:flex; flex-direction:column; gap:2px; }
-    .msg-content strong { color: #ffffff; }
+    .msg-content { white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.75; display:flex; flex-direction:column; gap:3px; }
+    .msg-content strong { color: #ffffff; font-weight: 700; }
     .msg-content pre.code-block {
       margin: 8px 0;
       border-radius: 6px;
@@ -501,7 +517,17 @@
       font-size: 11px;
       background: #0d1117;
     }
+    .msg-content pre.code-block { position: relative; }
     .msg-content pre.code-block .hljs { background: #0d1117; padding: 14px 16px; }
+    .copy-btn {
+      position: absolute; top: 6px; right: 8px;
+      background: rgba(170,68,255,0.15); border: 1px solid #aa44ff55;
+      color: #cc88ff; font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: .5px; padding: 3px 8px; border-radius: 3px; cursor: pointer;
+      opacity: 0; transition: opacity .18s, background .18s; text-transform: uppercase;
+    }
+    .msg-content pre.code-block:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { background: rgba(170,68,255,0.3); color: #fff; }
     .msg-content .lang-label {
       display: block;
       background: #1a1a2e;
@@ -521,15 +547,15 @@
       font-size: 10px;
     }
     /* ── Markdown extra ── */
-    .md-section { display:flex; align-items:center; gap:8px; margin:10px 0 6px; color:#00e5ff; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1.5px; font-weight:700; }
+    .md-section { display:flex; align-items:center; gap:8px; margin:14px 0 7px; color:#00e5ff; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1.5px; font-weight:700; }
     .md-section::before,.md-section::after { content:''; flex:1; height:1px; background:rgba(0,229,255,.2); }
-    .md-h1 { font-size:15px; font-weight:700; color:#fff; margin:8px 0 4px; letter-spacing:.5px; }
-    .md-h2 { font-size:12px; font-weight:700; color:#e2e8f0; margin:6px 0 3px; padding-left:8px; border-left:3px solid #00e5ff; }
-    .md-h3 { font-size:11px; font-weight:600; color:#94a3b8; margin:4px 0 2px; }
-    .md-li { padding:1px 0 1px 4px; color:#cbd5e1; display:flex; gap:6px; }
-    .md-li::before { content:'▸'; color:#00e5ff; flex-shrink:0; }
-    .md-p { margin:2px 0; color:#cbd5e1; }
-    .md-space { height:5px; }
+    .md-h1 { font-size:15px; font-weight:700; color:#fff; margin:14px 0 6px; letter-spacing:.3px; line-height:1.4; }
+    .md-h2 { font-size:12.5px; font-weight:700; color:#e2e8f0; margin:12px 0 5px; padding-left:9px; border-left:3px solid #00e5ff; line-height:1.45; }
+    .md-h3 { font-size:11.5px; font-weight:600; color:#a5b4c8; margin:9px 0 4px; letter-spacing:.2px; }
+    .md-p { margin:3px 0; color:#cdd6e4; line-height:1.75; }
+    .md-li { position:relative; padding:2px 0 2px 18px; margin:2px 0; color:#cdd6e4; line-height:1.7; }
+    .md-li::before { content:'▸'; position:absolute; left:2px; top:2px; color:#00e5ff; }
+    .md-space { height:6px; }
     .md-tool-call { display:inline-flex; align-items:center; gap:5px; background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.3); color:#a78bfa; padding:2px 8px; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.5px; margin:4px 0; }
     .md-tool-call::before { content:'⚙'; }
     .md-tool-out { background:rgba(0,0,0,.5); border-left:2px solid rgba(100,116,139,.4); padding:5px 10px; margin:2px 0 6px; font-family:'Share Tech Mono',monospace; font-size:10px; color:#64748b; overflow-x:auto; white-space:pre-wrap; word-break:break-all; border-radius:0 4px 4px 0; max-height:180px; overflow-y:auto; }
@@ -1145,14 +1171,54 @@
       left: 18px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 14px 8px;
+      gap: 8px;
+      padding: 12px 12px 14px;
       background: rgba(3,0,18,0.88);
       border: 1px solid #aa44ff33;
       backdrop-filter: blur(18px);
-      width: 96px;
+      width: 208px;
       z-index: 10;
       pointer-events: all;
+      border-radius: 4px;
+    }
+    #model-select {
+      width: 100%;
+      background: rgba(170,68,255,0.08);
+      border: 1px solid #aa44ff55;
+      color: #cc88ff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .5px;
+      padding: 9px 30px 9px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: all .2s;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23aa44ff' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    #model-select:hover, #model-select:focus {
+      border-color: #aa44ffbb;
+      box-shadow: 0 0 14px #aa44ff33;
+      outline: none;
+    }
+    #model-select option {
+      background: #0a0518;
+      color: #e0d0ff;
+    }
+    #model-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      line-height: 1.55;
+      color: #9a86c8;
+      letter-spacing: .3px;
+      padding: 6px 8px;
+      border-left: 2px solid #aa44ff88;
+      background: rgba(170,68,255,0.05);
+      border-radius: 0 3px 3px 0;
+      transition: all .2s;
     }
     .model-btn {
       flex: 0 0 auto;
@@ -1194,6 +1260,20 @@
       color: #00eeff;
       text-shadow: 0 0 10px #00eeff66;
       box-shadow: 0 0 16px #00eeff22, inset 0 0 10px #00eeff0d;
+    }
+    .model-btn.active-code {
+      background: rgba(170,68,255,0.14);
+      border-color: #aa44ffbb;
+      color: #cc88ff;
+      text-shadow: 0 0 10px #aa44ff66;
+      box-shadow: 0 0 16px #aa44ff22, inset 0 0 10px #aa44ff0d;
+    }
+    .model-btn.active-gen {
+      background: rgba(0,255,136,0.10);
+      border-color: #00ff88bb;
+      color: #00ff88;
+      text-shadow: 0 0 10px #00ff8866;
+      box-shadow: 0 0 16px #00ff8822, inset 0 0 10px #00ff880d;
     }
     #model-label {
       font-family: 'Share Tech Mono', monospace;
@@ -1275,12 +1355,6 @@
     <button id="logout-btn" onclick="xoneLogout()">
       ⏻ LOGOUT
     </button>
-    <button id="smartfuzz-btn" onclick="toggleSmartFuzz()" title="Smart Fuzzing — IA sugere extensões e paths">
-      ⬡ SMART FUZZ
-    </button>
-    <button id="reports-btn" onclick="toggleReports()" title="Download relatórios guardados">
-      ↓ REPORTS <span id="reports-badge" style="display:none;background:#00eeff22;border:1px solid #00eeff44;border-radius:8px;padding:0 6px;font-size:10px;color:#00eeff;margin-left:4px">0</span>
-    </button>
   </div>
 
   <!-- Reports Modal -->
@@ -1357,16 +1431,13 @@
   <!-- Model Switcher — canto superior esquerdo -->
   <div id="model-switcher">
     <span id="model-label">MODELO</span>
-    <button class="model-btn" id="btn-hack"
-            onclick="selectModel('dolphin-llama3','hack')">
-      <span class="mb-icon">☠</span>
-      <span class="mb-text">SEM FILTROS</span>
-    </button>
-    <button class="model-btn active-fast" id="btn-fast"
-            onclick="selectModel('llama3.2','fast')">
-      <span class="mb-icon">⚡</span>
-      <span class="mb-text">MODO RÁPIDO</span>
-    </button>
+    <select id="model-select" onchange="selectModelDropdown(this.value)">
+      <option value="qwen2.5-coder:7b">☠ SEM FILTROS</option>
+      <option value="qwen2.5-coder:3b">🧠 CODER 3B</option>
+      <option value="llama3.2">🦙 GERAL 3B</option>
+      <option value="qwen2.5:1.5b" selected>⚡ MODO RÁPIDO</option>
+    </select>
+    <div id="model-desc"></div>
   </div>
 
   <!-- Chat Panel -->
@@ -1932,8 +2003,12 @@
       const _bmem = document.getElementById('bmem'); if (_bmem) _bmem.style.width = mem + '%';
     }
 
+    let _neuralActive = false;
+    let _neuralRaf    = null;
+
     function loop() {
-      requestAnimationFrame(loop);
+      if (!_neuralActive) return;
+      _neuralRaf = requestAnimationFrame(loop);
       frame++;
 
       ctx.fillStyle = 'rgba(0, 0, 10, 0.16)';
@@ -1959,8 +2034,26 @@
       updateStats();
     }
 
+    // Controlo global — a animação (partículas/rede neural) só corre quando
+    // a AVEONE está conectada. Desligada = fundo preto estático, poupa CPU/RAM.
+    window.__neuralSetActive = function(on) {
+      on = !!on;
+      if (on === _neuralActive) return;
+      _neuralActive = on;
+      if (on) {
+        loop();
+      } else {
+        if (_neuralRaf) cancelAnimationFrame(_neuralRaf);
+        _neuralRaf = null;
+        ctx.fillStyle = '#00000a';
+        ctx.fillRect(0, 0, W, H);
+      }
+    };
+
     init();
-    loop();
+    // Fundo preto estático até conectar à AVEONE
+    ctx.fillStyle = '#00000a';
+    ctx.fillRect(0, 0, W, H);
 
   })();
   </script>
@@ -1976,18 +2069,50 @@
     let listening    = false;
 
     // ── Model switcher ────────────────────────────────
-    let currentModel = 'llama3.2';
+    let currentModel = 'qwen2.5:1.5b';
 
-    window.selectModel = function(model, type) {
+    // ID de sessão do navegador — isola a conversa desta aba das outras.
+    // Persiste em localStorage para sobreviver a reloads.
+    function _genSid() {
+      return 'br-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    }
+    let sessionId;
+    try {
+      sessionId = localStorage.getItem('xone_sid') || _genSid();
+      localStorage.setItem('xone_sid', sessionId);
+    } catch (e) { sessionId = _genSid(); }
+
+    function _modelShort(m) {
+      return ({
+        'qwen2.5-coder:7b': 'sem filtros',
+        'qwen2.5-coder:3b': 'coder 3b',
+        'llama3.2':         'geral 3b',
+        'qwen2.5:1.5b':     'rápido',
+      })[m] || m;
+    }
+    const MODEL_INFO = {
+      'qwen2.5-coder:7b': { color:'#ff7777', desc:'Melhor qualidade de código, mas lento (2-4 min por resposta). Usa quando queres o melhor resultado e não tens pressa.' },
+      'qwen2.5-coder:3b': { color:'#cc88ff', desc:'Bom em código e ~2x mais rápido que o 7B (~1 min). O melhor equilíbrio para o dia a dia.' },
+      'llama3.2':         { color:'#00ff88', desc:'Modelo geral equilibrado e rápido. Ideal para perguntas gerais, explicações e conversa.' },
+      'qwen2.5:1.5b':     { color:'#00eeff', desc:'Respostas simples quase instantâneas. Leve, para perguntas rápidas e diretas.' },
+    };
+    window.selectModelDropdown = function(model) {
       currentModel = model;
-      document.getElementById('btn-hack').className = 'model-btn';
-      document.getElementById('btn-fast').className = 'model-btn';
-      if (type === 'hack') {
-        document.getElementById('btn-hack').className = 'model-btn active-hack';
-      } else {
-        document.getElementById('btn-fast').className = 'model-btn active-fast';
+      const info = MODEL_INFO[model];
+      const desc = document.getElementById('model-desc');
+      const sel  = document.getElementById('model-select');
+      if (info && desc) {
+        desc.textContent = info.desc;
+        desc.style.borderLeftColor = info.color;
+        desc.style.color = info.color;
+      }
+      if (info && sel) {
+        sel.style.color = info.color;
+        sel.style.borderColor = info.color + '88';
       }
     };
+    // Descrição inicial (modelo por omissão)
+    selectModelDropdown(document.getElementById('model-select').value);
 
     // Enter para enviar
     inputEl.addEventListener('keydown', e => {
@@ -2086,6 +2211,24 @@
       });
     }
 
+    // Item 7 — botão "copiar" em cada bloco de código
+    function enhanceCodeBlocks(el) {
+      el.querySelectorAll('pre.code-block:not([data-enhanced])').forEach(pre => {
+        pre.setAttribute('data-enhanced', '1');
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'copiar';
+        btn.onclick = () => {
+          const code = pre.querySelector('code');
+          navigator.clipboard.writeText(code ? code.textContent : '').then(() => {
+            btn.textContent = '✓ copiado';
+            setTimeout(() => btn.textContent = 'copiar', 1500);
+          }).catch(() => { btn.textContent = 'erro'; });
+        };
+        pre.appendChild(btn);
+      });
+    }
+
     const _THINK_PHASES = [
       '🔍 A pesquisar nas melhores fontes da internet e da dark web...',
       '📡 Encontrei conteúdo divulgado por hackers, bug hunters e pentesters... a verificar se as informações são válidas...',
@@ -2162,7 +2305,14 @@
     });
 
     let _abortController = null;
+    let _lastUserMsg = '';
     const _stopBtn = document.getElementById('stop-btn');
+
+    window.regenerate = function() {
+      if (!_lastUserMsg) return;
+      inputEl.value = _lastUserMsg;
+      sendMessage();
+    };
 
     function _setStopVisible(on) {
       if (on) _stopBtn.classList.add('active');
@@ -2176,6 +2326,7 @@
     window.sendMessage = async function(opts) {
       const msg = inputEl.value.trim();
       if (!msg) return;
+      _lastUserMsg = msg;
       inputEl.value = '';
       const displayMsg = (opts && opts.displayMsg) ? opts.displayMsg : msg;
       addMsg(displayMsg, 'user');
@@ -2197,7 +2348,7 @@
       botEl.className = 'msg bot';
       const tagSpan = document.createElement('span');
       tagSpan.className = 'tag';
-      tagSpan.textContent = '◈ X-ONE';
+      tagSpan.innerHTML = '◈ X-ONE <span class="model-badge">' + _modelShort(currentModel) + '</span>';
       botEl.appendChild(tagSpan);
       // Pontos animados enquanto aguarda o stream
       const typingEl = document.createElement('span');
@@ -2214,7 +2365,7 @@
         const res = await fetch(`${API}/api/chat`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: msg, model: currentModel, image: _pastedImage || null}),
+          body: JSON.stringify({message: msg, model: currentModel, image: _pastedImage || null, session_id: sessionId}),
           signal: _abortController.signal
         });
 
@@ -2225,6 +2376,11 @@
         let buffer    = '';
         let fullText  = '';
         let firstToken = false;
+        let lastRender = 0;
+        // Só auto-scrolla se o utilizador já está perto do fim (não o puxa para
+        // baixo quando ele rolou para cima a ler).
+        const _nearBottom = () =>
+          (messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight) < 90;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -2246,23 +2402,35 @@
                   _transitionToWriting(); // fase 3 → remove thinking
                 }
                 fullText += data.token;
-                contentDiv.innerHTML = renderMarkdown(fullText);
-                highlightNew(contentDiv);
-                messagesEl.scrollTop = messagesEl.scrollHeight;
+                // Throttle: re-renderiza no máx. a cada 60ms (antes era a cada
+                // token = O(n²) e piscava). O highlight fica só para o fim.
+                const now = performance.now();
+                if (now - lastRender > 60) {
+                  lastRender = now;
+                  const atBottom = _nearBottom();
+                  contentDiv.innerHTML = renderMarkdown(fullText);
+                  if (atBottom) messagesEl.scrollTop = messagesEl.scrollHeight;
+                }
               }
 
               if (data.done) {
-                if (data.audio_url) {
-                  try {
-                    new Audio(data.audio_url + '?t=' + Date.now()).play().catch(() => {});
-                  } catch(e) {}
-                }
+                // Render final garantido + highlight + botões de copiar
+                const atBottom = _nearBottom();
+                contentDiv.innerHTML = renderMarkdown(fullText);
+                highlightNew(contentDiv);
+                enhanceCodeBlocks(contentDiv);
+                if (atBottom) messagesEl.scrollTop = messagesEl.scrollHeight;
                 const notif = document.createElement('div');
                 notif.className = 'msg system';
                 notif.style.cssText = 'text-align:center;color:#0f0;border:1px solid #0f04;background:#0f01;font-size:0.82em;letter-spacing:0.08em;padding:6px 12px;';
-                notif.textContent = '✅ Pesquisa finalizada';
+                notif.innerHTML = '✅ Pesquisa finalizada';
+                const regenBtn = document.createElement('button');
+                regenBtn.className = 'regen-btn';
+                regenBtn.textContent = '↻ regenerar';
+                regenBtn.onclick = () => window.regenerate();
+                notif.appendChild(regenBtn);
                 messagesEl.appendChild(notif);
-                messagesEl.scrollTop = messagesEl.scrollHeight;
+                if (_nearBottom()) messagesEl.scrollTop = messagesEl.scrollHeight;
                 // Auto-refresh reports badge e lista após cada resposta
                 setTimeout(_refreshReportsBadge, 800);
               }
@@ -2288,12 +2456,18 @@
       _abortController = null;
     };
 
+    function _rotateSession() {
+      sessionId = _genSid();
+      try { localStorage.setItem('xone_sid', sessionId); } catch(e) {}
+    }
+
     window.clearChat = async function() {
       messagesEl.innerHTML = '<div class="msg system">◈ CHAT LIMPO ◈</div>';
       try {
-        await fetch(`${API}/api/clear`, {method:'POST'});
-        await loadHistory();
+        await fetch(`${API}/api/clear`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({session_id: sessionId})});
       } catch(e) {}
+      _rotateSession();          // conversa nova e limpa
+      try { await loadHistory(); } catch(e) {}
     };
 
     // ── Histórico de conversas ────────────────────────────
@@ -2330,10 +2504,8 @@
 
     window.newConversation = async function() {
       messagesEl.innerHTML = '<div class="msg system">◈ NOVA CONVERSA ◈</div>';
-      try {
-        await fetch(`${API}/api/clear`, {method:'POST'});
-        await loadHistory();
-      } catch(e) {}
+      _rotateSession();          // sessão nova isolada
+      try { await loadHistory(); } catch(e) {}
     };
 
     window.restoreSession = async function(id) {
@@ -2341,6 +2513,9 @@
         const r = await fetch(`${API}/api/sessions/${id}/restore`, {method:'POST'});
         const d = await r.json();
         if (!d.ok) return;
+        // Adota o id restaurado — a conversa continua a partir daqui
+        sessionId = id;
+        try { localStorage.setItem('xone_sid', sessionId); } catch(e) {}
         // Re-render messages
         messagesEl.innerHTML = '';
         for (const m of d.messages) {
@@ -2785,8 +2960,10 @@
         dot.title = d.connected
           ? `AVEONE conectada (há ${d.seconds_ago}s)`
           : 'AVEONE offline — abre e faz login na app';
+        if (typeof window.__neuralSetActive === 'function') window.__neuralSetActive(d.connected);
       } catch {
         dot.className = 'offline';
+        if (typeof window.__neuralSetActive === 'function') window.__neuralSetActive(false);
       }
     }
     checkAveoneStatus();
