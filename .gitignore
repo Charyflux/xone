@@ -1,39 +1,16 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-.venv/
-venv/
-env/
-
-# Runtime audio (gerado automaticamente)
-reply.mp3
-welcome_jarvis.mp3
-/tmp/
-
-# Dados sensíveis (achados de pentest, histórico de conversas)
-findings.json
-xone_memory.db
-reports/
-
-# Ambiente
+# Segredos e config local — NUNCA versionar
 .env
-secrets.env
 *.env
+secrets*
 
-# OS
-.DS_Store
-Thumbs.db
+# Dados locais / sessões / bancos
+*.db
+*.sqlite
+reports/
+audio/
+__pycache__/
+*.pyc
 
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# Logs
-*.log
+# Modelos (baixados via `ollama pull`, não no git)
+*.gguf
+*.bin
