@@ -1,290 +1,192 @@
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--                        X-ONE · README                        -->
-<!-- ═══════════════════════════════════════════════════════════ -->
+<div align="center">
 
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:00eeff,50:7c3aed,100:aa44ff&height=210&section=header&text=X-ONE&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Neural%20Network%20·%20AI%20Brain%20for%20Pentesting&descAlignY=60&descSize=18" alt="X-ONE"/>
-</p>
+# ☠️ X-ONE
 
-<p align="center">
-  <a href="https://github.com/Charyflux/xone/stargazers"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=00EEFF&center=true&vCenter=true&width=720&lines=IA+de+pentesting+100%25+local%2C+sem+censura;Sem+custos+de+API+%C2%B7+As+tuas+conversas+n%C3%A3o+saem+da+m%C3%A1quina;Multi-modelo+%C2%B7+OSINT+%C2%B7+An%C3%A1lise+de+vulnerabilidades;O+teu+co-piloto+ofensivo%2C+sem+rodeios" alt="Typing SVG"/></a>
-</p>
+### 🧠 IA de Pentesting e Segurança Ofensiva — **100% Sem Filtro**, rodando **localmente** na sua máquina
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776ab?style=for-the-badge&logo=python&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Ollama-Local_LLM-000000?style=for-the-badge&logo=ollama&logoColor=white"/>
-  <img src="https://img.shields.io/badge/FastAPI-SSE_Streaming-009688?style=for-the-badge&logo=fastapi&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Vers%C3%A3o-5.0-aa44ff?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/Licen%C3%A7a-Uso_Autorizado-ff3355?style=for-the-badge"/>
-</p>
+*Neural Network · Sistema Ativo*
 
-<p align="center">
-  <b>🧠 Roda na tua própria máquina. Sem nuvem. Sem filtros desnecessários. Sem faturas de API.</b>
-</p>
+![status](https://img.shields.io/badge/status-ativo-00e5ff?style=for-the-badge)
+![sem_filtro](https://img.shields.io/badge/modo-SEM%20FILTRO-ff3355?style=for-the-badge)
+![local](https://img.shields.io/badge/roda-100%25%20LOCAL-9b5cff?style=for-the-badge)
+![python](https://img.shields.io/badge/python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-<p align="center">
-  <a href="#-instalação">🚀 Instalar</a> ·
-  <a href="#-o-que-faz">✨ Features</a> ·
-  <a href="#-modelos">🤖 Modelos</a> ·
-  <a href="#-porquê-usar">💡 Porquê</a> ·
-  <a href="#-arquitetura">🏗️ Arquitetura</a>
-</p>
+</div>
 
 ---
 
-## 🧠 O que é o X-ONE
+## 🎯 O que é o X-ONE?
 
-O **X-ONE** é uma **interface de IA para pentesting e bug bounty** que corre **inteiramente na tua máquina**. Escolhes o modelo local que queres no menu lateral, fazes a pergunta técnica que precisas — e recebes código funcional, PoCs, análises de vulnerabilidades e recon, com respostas de streaming em tempo real numa interface *cyberpunk* animada.
+O **X-ONE** é uma **IA especialista em pentesting e segurança ofensiva** que roda **na sua própria máquina** — sem depender de servidor, sem enviar seus dados pra lugar nenhum, e **sem filtro de censura**.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Tu:      "Cria um PoC de SSRF que atinge a metadata da AWS"  │
-│                                                               │
-│  ChatGPT: "Desculpa, não posso ajudar com isso…"             │
-│                                                               │
-│  X-ONE:   import requests                                     │
-│           targets = ["http://169.254.169.254/latest/meta…"]  │
-│           for t in targets: r = requests.get(...)   ← pronto  │
-└─────────────────────────────────────────────────────────────┘
-```
+Ele **entrega payloads, exploits, scripts ofensivos e PoCs prontos pra copiar** — sem recusar, sem "não posso ajudar com isso", sem enrolação. É pensado pra **bug hunters, pentesters e estudantes de segurança** que trabalham em **ambiente autorizado**.
 
-> [!IMPORTANT]
-> O X-ONE é uma ferramenta para **profissionais de segurança**: pentest autorizado, programas de bug bounty com escopo, CTFs e investigação/educação. **Usa-o apenas contra alvos que tens permissão explícita para testar.**
+> 💡 **Por que "sem filtro"?** IAs comuns (ChatGPT, Claude, etc.) recusam gerar payload de XSS, exploit, shell reverso ou script de recon — mesmo em pentest legítimo. O X-ONE usa um modelo **abliterated** (as recusas foram removidas do próprio modelo), então ele **responde direto**.
 
 ---
 
-## ✨ O que faz
+## ✨ Por que usar
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 🤖 Multi-modelo num clique
-Menu lateral com **dropdown** para trocar de modelo na hora, com descrição de cada um. Do ultra-rápido ao mais capaz em código.
-
-### ⚡ Streaming em tempo real
-Respostas token-a-token via **SSE**, com render throttled (sem lag) e auto-scroll inteligente que não te puxa para baixo quando lês.
-
-### 🎨 Realce de sintaxe + copiar
-Blocos de código com **highlight.js**, botão **copiar** em cada bloco e um badge a dizer qual modelo respondeu.
-
-### 🧵 Conversas isoladas + histórico
-Cada aba tem a **sua própria conversa** (nada de contexto misturado). Histórico persistente em SQLite, com restaurar e apagar.
-
-</td>
-<td width="50%" valign="top">
-
-### 🕵️ OSINT de empresa/domínio
-Script consolidado de recon: emails+hosts (**theHarvester**), serviços expostos (**Shodan**), tech-stack/WAF (**whatweb/wafw00f**) e segredos em repos (**gitleaks/trufflehog**).
-
-### 🎯 Análise de vulnerabilidades
-Pede um finding e recebe impacto real, **CVSS v3.1**, PoC funcional, passos de validação, bypass de WAF e report pronto.
-
-### 🖼️ Visão + voz (opcional)
-Cola uma **imagem** (screenshot de um erro, código) direto no chat. Transcrição de voz por microfone e TTS opcional.
-
-### 🔌 Integração AVEONE
-Recebe o contexto dos teus scans automaticamente e mantém-no partilhado entre sessões — a IA já sabe o que encontraste.
-
-</td>
-</tr>
-</table>
+| | |
+|---|---|
+| 🔓 **Sem filtro de verdade** | Modelo *abliterated* — não recusa payload, exploit nem script ofensivo |
+| 🏠 **100% local** | Roda na sua máquina. Seus alvos e dados **nunca saem do seu PC** |
+| ⚡ **Rápido** (com hardware ok) | Usa a **sua** CPU/GPU — quanto melhor a máquina, mais rápido |
+| 💸 **Sem custo de API** | O modelo roda local via Ollama. Zero mensalidade de API de IA |
+| 🎩 **Especialista ofensivo** | Recon, XSS, SQLi, LFI, SSRF, JWT, exploits, one-liners prontos |
+| 🖥️ **Interface bonita** | UI web cyberpunk, com histórico e microfone (voz) |
 
 ---
 
-## 🤖 Modelos
+## 📦 O que vai ser instalado
 
-O menu lateral vem pré-configurado com 4 perfis. Todos correm **localmente** via Ollama — escolhe conforme queres **velocidade** ou **qualidade**:
+Ao rodar o instalador, três coisas entram na sua máquina:
 
-| Perfil | Modelo | Tamanho | Perfil de uso |
-|:---|:---|:---:|:---|
-| ⚡ **MODO RÁPIDO** | `qwen2.5:1.5b` | ~1 GB | Respostas simples, quase instantâneo |
-| 🦙 **GERAL 3B** | `llama3.2` | ~2 GB | Modelo geral equilibrado |
-| 🧠 **CODER 3B** | `qwen2.5-coder:3b` | ~2 GB | **Bom código, rápido — o melhor equilíbrio** |
-| ☠️ **SEM FILTROS** | `qwen2.5-coder:7b` | ~4.7 GB | Melhor qualidade de código |
+1. **🦙 Ollama** — o motor que roda modelos de IA localmente ([ollama.com](https://ollama.com)).
+2. **🧠 O modelo sem filtro** — `huihui_ai/qwen2.5-abliterate:3b` (~2 GB). É um Qwen 2.5 *abliterated* (sem censura).
+3. **🐍 O X-ONE** — o servidor (`brain_server.py`) + a interface web (`index.html`), rodando na porta **7777**.
 
-> 💡 **Dica:** trocar de modelo é instantâneo no dropdown. Cada modelo fica "quente" em memória por 2h após o uso (keep-alive), por isso só pagas o carregamento inicial uma vez. Preferes máxima ausência de filtros? Adiciona `dolphin-llama3` (não-censurado). Preferes velocidade real? Um modelo cloud da Ollama ou a API da Anthropic.
+> Nada disso "liga pra casa". Depois de instalado, funciona **offline** (só precisa de internet no download inicial do modelo).
 
 ---
 
-## 💡 Porquê usar
+## ⚙️ Requisitos
 
-<table>
-<tr>
-<td align="center" width="25%">🔒<br><b>Privacidade total</b><br><sub>As tuas perguntas nunca saem da tua máquina. Zero telemetria.</sub></td>
-<td align="center" width="25%">💸<br><b>Custo zero</b><br><sub>Sem faturas de API. Corre local, ilimitado, para sempre.</sub></td>
-<td align="center" width="25%">🚫<br><b>Sem rodeios</b><br><sub>Respostas técnicas diretas, sem avisos desnecessários em cada linha.</sub></td>
-<td align="center" width="25%">🧰<br><b>Arsenal integrado</b><br><sub>OSINT, findings, recon e análise num só sítio.</sub></td>
-</tr>
-</table>
+| Recurso | Mínimo | Recomendado |
+|---|---|---|
+| 💾 **RAM** | 8 GB | 16 GB+ |
+| 🧮 **CPU** | 4 núcleos | 8+ núcleos |
+| 🎮 **GPU** | opcional | **NVIDIA (deixa MUITO mais rápido)** |
+| 💽 **Disco** | ~5 GB livres | — |
+| 🐍 **Python** | 3.10+ | 3.11+ |
+| 🖥️ **SO** | Windows 10+, Linux, macOS | — |
 
----
-
-## 📦 O que precisas
-
-| Requisito | Versão | Notas |
-|:---|:---|:---|
-| **Python** | 3.10+ | Backend FastAPI |
-| **Ollama** | recente | Motor dos modelos locais — [ollama.com](https://ollama.com) |
-| **RAM** | 8 GB+ | 16 GB+ recomendado para os modelos de 7B |
-| **Disco** | ~10 GB | Para os modelos (opcional, só os que usares) |
-| **ffmpeg + sox** | opcional | Só se ativares a voz (TTS) |
+> ⚠️ **Sem GPU?** Funciona em CPU, mas fica mais lento. O modelo **3b** foi escolhido justamente por rodar em CPU comum. Com **GPU NVIDIA**, dá pra usar o **7b** (mais inteligente) e ainda voar.
 
 ---
 
-## 🚀 Instalação
+## 🚀 Como instalar
 
-### 1️⃣ Instala o Ollama e puxa os modelos
+### 🪟 Windows
+
+1. Instale o **Python 3.10+**: [python.org/downloads](https://python.org/downloads) *(marque "Add Python to PATH")*
+2. Instale o **Ollama**: [ollama.com/download](https://ollama.com/download)
+3. Baixe este repositório (**Code → Download ZIP**) e extraia.
+4. Dê **duplo clique em `install.bat`** e aguarde o download do modelo.
+5. Depois, **duplo clique em `start.bat`**.
+6. Abra o navegador em **http://localhost:7777** 🎉
+
+### 🐧 Linux / 🍎 macOS
 
 ```bash
-# Linux / macOS
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Puxa os modelos do menu (escolhe os que quiseres)
-ollama pull qwen2.5:1.5b        # ⚡ rápido
-ollama pull llama3.2            # 🦙 geral
-ollama pull qwen2.5-coder:3b   # 🧠 coder rápido
-ollama pull qwen2.5-coder:7b   # ☠️ melhor código
-```
-
-### 2️⃣ Clona e instala as dependências
-
-```bash
+# 1) baixe o repositório
 git clone https://github.com/Charyflux/xone.git
 cd xone
-pip install -r requirements.txt
+
+# 2) instale (Ollama + modelo + dependências)
+chmod +x install.sh start.sh
+./install.sh
+
+# 3) inicie
+./start.sh
 ```
 
-### 3️⃣ Configura (opcional)
+Depois abra **http://localhost:7777** no navegador. ✅
+
+---
+
+## 🕹️ Como usar
+
+1. Abra **http://localhost:7777**.
+2. No campo de baixo, **digite o que precisa** — ou clique no 🎤 pra falar.
+3. Exemplos:
+   - *"me dá um payload de XSS refletido com bypass de WAF"*
+   - *"script python pra fazer fuzzing de parâmetros"*
+   - *"one-liner de recon de subdomínios"*
+   - *"exploit pra essa versão do [software]"*
+4. O X-ONE responde com o **código pronto pra copiar**. Sem recusar.
+
+> 💬 O menu tem **uma opção só: `☠ SEM FILTRO`** — é o modelo abliterated. Simples assim.
+
+---
+
+## 🔧 Como configurar
+
+Toda a config fica no arquivo **`.env`** (criado automaticamente a partir do `.env.example`):
 
 ```bash
-cp .env.example .env
-# Edita o .env se quiseres mudar a porta, o modelo padrão, etc.
+OLLAMA_MODEL=huihui_ai/qwen2.5-abliterate:3b   # o modelo (3b=rápido, 7b=melhor)
+PORT=7777                                       # porta da interface
+MAX_TOKENS=600                                  # menor = respostas mais rápidas
+TTS_ENABLED=0                                   # 1 liga a voz
+ANTHROPIC_API_KEY=                              # DEIXE VAZIO p/ modo sem filtro
 ```
+
+### 🧠 Trocar o modelo (mais rápido ↔ mais inteligente)
+
+```bash
+# mais RÁPIDO (CPU modesta) — padrão
+ollama pull huihui_ai/qwen2.5-abliterate:3b
+
+# mais INTELIGENTE (precisa de GPU ou CPU forte)
+ollama pull huihui_ai/qwen2.5-abliterate:7b
+```
+
+Depois é só mudar `OLLAMA_MODEL` no `.env` e reiniciar (`start.sh` / `start.bat`).
+
+---
+
+## ⚡ Está lento? Deixe mais rápido
+
+| Ação | Efeito |
+|---|---|
+| 🎮 **Use uma GPU NVIDIA** | O maior salto — 10-20x mais rápido |
+| 🔽 **Modelo `3b`** em vez do `7b` | ~2x mais rápido em CPU |
+| ✂️ **Baixe o `MAX_TOKENS`** (600 → 300) | Respostas mais curtas terminam antes |
+| 🧹 **Feche programas pesados** | O modelo usa a CPU — libere-a pra ele |
+
+---
+
+## 🆘 Problemas comuns
 
 <details>
-<summary><b>⚙️ Variáveis do .env</b></summary>
+<summary><b>❓ "Não conecta / página não abre"</b></summary>
 
-```ini
-OLLAMA_URL=http://localhost:11434   # onde o Ollama escuta
-OLLAMA_MODEL=qwen2.5:1.5b           # modelo padrão
-PORT=7777                          # porta do X-ONE
-MAX_HISTORY=20                     # nº de mensagens de contexto
-MAX_TOKENS=2048                    # tamanho máx. de resposta
-TTS_ENABLED=0                      # 1 = ativa a voz (precisa ffmpeg+sox)
-# ANTHROPIC_API_KEY=               # opcional: usa Claude na nuvem em vez do local
-```
+Confira se o `start.sh` / `start.bat` está rodando (a janela deve ficar aberta) e acesse **http://localhost:7777** (não https).
 </details>
-
-### 4️⃣ Arranca
-
-```bash
-python brain_server.py
-```
-
-Abre **http://localhost:7777** 🎉
 
 <details>
-<summary><b>🔧 Correr como serviço (systemd, arranca sempre)</b></summary>
+<summary><b>❓ "Ollama não encontrado"</b></summary>
 
-```ini
-# /etc/systemd/system/xone.service
-[Unit]
-Description=X-ONE AI Brain
-After=network.target ollama.service
-Wants=ollama.service
+Instale o Ollama em [ollama.com/download](https://ollama.com/download) e rode o instalador de novo.
+</details>
 
-[Service]
-Type=simple
-WorkingDirectory=/caminho/para/xone
-Environment=PORT=7777
-ExecStart=/usr/bin/python3 /caminho/para/xone/brain_server.py
-Restart=always
-RestartSec=5
+<details>
+<summary><b>❓ "Muito lento"</b></summary>
 
-[Install]
-WantedBy=multi-user.target
-```
+É CPU. Veja a seção **⚡ Está lento?** acima. Com GPU NVIDIA resolve; sem GPU, use o modelo `3b` e baixe o `MAX_TOKENS`.
+</details>
 
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now xone.service
-```
+<details>
+<summary><b>❓ "Ele recusou algo"</b></summary>
+
+O modelo abliterated raramente recusa. Se acontecer, reformule o pedido de forma técnica/direta, ou confirme que o `.env` está com `ANTHROPIC_API_KEY` **vazio** (com chave da Anthropic ele usa o Claude, que TEM filtro).
 </details>
 
 ---
 
-## 🎮 Como usar
+## ⚖️ Aviso legal
 
-1. **Escolhe o modelo** no dropdown do canto superior esquerdo (a descrição explica cada um).
-2. **Escreve a tua pergunta** na barra inferior — ou cola uma imagem, ou usa o microfone.
-3. A resposta faz **stream** em tempo real, com código realçado e botão de copiar.
-4. Precisas de mudar de assunto? **CLR** limpa e abre uma conversa nova e isolada.
-5. Queres voltar a uma conversa antiga? Abre o **Histórico** e restaura.
+> 🛡️ O X-ONE é uma ferramenta para **segurança ofensiva em ambiente AUTORIZADO** — pentests contratados, bug bounty dentro do escopo, CTFs e laboratórios próprios.
+>
+> **Você é o único responsável** pelo uso. Testar sistemas sem autorização é crime. Use com ética e dentro da lei.
 
 ---
 
-## 🏗️ Arquitetura
+<div align="center">
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Browser (index.html)                                         │
-│  • UI cyberpunk animada (canvas neural network)               │
-│  • Streaming SSE · markdown + highlight.js · sessão isolada   │
-└───────────────────────────┬──────────────────────────────────┘
-                            │  HTTP / SSE
-┌───────────────────────────▼──────────────────────────────────┐
-│  brain_server.py (FastAPI)                                    │
-│  • /api/chat  → streaming token-a-token                       │
-│  • histórico por-sessão + contexto AVEONE partilhado          │
-│  • sampling afinado por modelo · num_ctx 8192                 │
-│  • sessões em SQLite · findings · OSINT · recon tools         │
-└───────────────────────────┬──────────────────────────────────┘
-                            │  /api/chat (template nativo)
-┌───────────────────────────▼──────────────────────────────────┐
-│  Ollama  (localhost:11434)                                    │
-│  qwen2.5 · qwen2.5-coder · llama3.2 · dolphin-llama3 · …       │
-└──────────────────────────────────────────────────────────────┘
-```
+**☠️ X-ONE** — *feito para quem hackeia de verdade.*
 
----
+Se curtiu, deixa uma ⭐ no repositório!
 
-## 🧩 Stack
-
-<p align="center">
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Ollama-000000?style=flat-square&logo=ollama&logoColor=white"/>
-  <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white"/>
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white"/>
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black"/>
-  <img src="https://img.shields.io/badge/highlight.js-F7DF1E?style=flat-square&logo=javascript&logoColor=black"/>
-</p>
-
----
-
-## 🗺️ Roadmap
-
-- [x] Multi-modelo com dropdown + descrições
-- [x] Histórico de conversa isolado por sessão
-- [x] Migração para `/api/chat` nativo + `num_ctx` maior
-- [x] Botão copiar, regenerar e badge do modelo
-- [x] Script OSINT de empresa/domínio
-- [ ] Busca web / RAG sobre os teus próprios findings
-- [ ] Execução de ferramentas de recon pelos modelos locais
-- [ ] Temas de UI alternativos
-
----
-
-## ⚠️ Aviso legal
-
-O X-ONE destina-se a **testes de segurança autorizados**, programas de **bug bounty com escopo**, **CTFs** e **investigação/educação**. O uso desta ferramenta contra sistemas sem autorização explícita é **ilegal** e é da tua inteira responsabilidade. Os autores não se responsabilizam por uso indevido.
-
----
-
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:aa44ff,50:7c3aed,100:00eeff&height=120&section=footer"/>
-</p>
-
-<p align="center">
-  <sub>⚡ Feito para quem faz segurança ofensiva a sério. Dá uma ⭐ se te for útil.</sub>
-</p>
+</div>
