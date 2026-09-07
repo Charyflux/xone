@@ -451,11 +451,11 @@
 
     .msg {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 11px;
-      line-height: 1.6;
-      padding: 8px 14px;
-      border-radius: 2px;
-      max-width: 92%;
+      font-size: 13.5px;
+      line-height: 1.7;
+      padding: 13px 17px;
+      border-radius: 10px;
+      max-width: 90%;
       overflow-wrap: break-word;
       word-break: normal;
       white-space: pre-wrap;
@@ -510,42 +510,59 @@
     .msg-content { white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.75; display:flex; flex-direction:column; gap:3px; }
     .msg-content strong { color: #ffffff; font-weight: 700; }
     .msg-content pre.code-block {
-      margin: 8px 0;
-      border-radius: 6px;
+      position: relative;
+      margin: 12px 0;
+      border-radius: 10px;
       border: 1px solid #aa44ff44;
-      border-left: 3px solid #aa44ff;
-      overflow-x: auto;
-      font-size: 11px;
+      overflow: hidden;
       background: #0d1117;
+      box-shadow: 0 6px 22px rgba(0,0,0,.45);
     }
-    .msg-content pre.code-block { position: relative; }
-    .msg-content pre.code-block .hljs { background: #0d1117; padding: 14px 16px; }
-    .copy-btn {
-      position: absolute; top: 6px; right: 8px;
-      background: rgba(170,68,255,0.15); border: 1px solid #aa44ff55;
-      color: #cc88ff; font-family: 'Share Tech Mono', monospace; font-size: 9px;
-      letter-spacing: .5px; padding: 3px 8px; border-radius: 3px; cursor: pointer;
-      opacity: 0; transition: opacity .18s, background .18s; text-transform: uppercase;
-    }
-    .msg-content pre.code-block:hover .copy-btn { opacity: 1; }
-    .copy-btn:hover { background: rgba(170,68,255,0.3); color: #fff; }
-    .msg-content .lang-label {
+    .msg-content pre.code-block .hljs {
+      background: #0d1117;
+      padding: 16px 18px;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre;      /* preserva as quebras, sem wrap feio */
+      overflow-x: auto;      /* scroll horizontal p/ linhas longas */
       display: block;
-      background: #1a1a2e;
-      color: #aa44ff;
-      font-size: 9px;
-      letter-spacing: 1px;
-      padding: 3px 12px;
+    }
+    .msg-content pre.code-block .hljs::-webkit-scrollbar { height: 8px; }
+    .msg-content pre.code-block .hljs::-webkit-scrollbar-thumb { background: #aa44ff55; border-radius: 4px; }
+    /* cabeçalho do bloco: linguagem à esquerda, copiar à direita */
+    .msg-content .lang-label {
+      display: flex; align-items: center;
+      background: linear-gradient(90deg,#191233,#241a3e);
+      color: #cc88ff;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 8px 14px;
       border-bottom: 1px solid #aa44ff33;
       font-family: 'Share Tech Mono', monospace;
     }
+    .msg-content .lang-label::before {
+      content: '●●●';
+      color: #aa44ff66; letter-spacing: 2px; margin-right: 10px; font-size: 8px;
+    }
+    .copy-btn {
+      position: absolute; top: 5px; right: 8px;
+      background: rgba(170,68,255,0.20); border: 1px solid #aa44ff77;
+      color: #e0c8ff; font-family: 'Share Tech Mono', monospace; font-size: 9.5px;
+      letter-spacing: .5px; padding: 4px 12px; border-radius: 6px; cursor: pointer;
+      opacity: .9; transition: opacity .18s, background .18s, transform .1s; text-transform: uppercase; z-index: 2;
+    }
+    .msg-content pre.code-block:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { background: rgba(170,68,255,0.4); color: #fff; transform: translateY(-1px); box-shadow: 0 0 12px #aa44ff55; }
+    .copy-btn:active { transform: translateY(0); }
     .msg-content code.inline-code {
       background: #1a1a2e;
       color: #00eeff;
-      padding: 1px 5px;
-      border-radius: 3px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid #00eeff22;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
     }
     /* ── Markdown extra ── */
     .md-section { display:flex; align-items:center; gap:8px; margin:14px 0 7px; color:#00e5ff; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1.5px; font-weight:700; }
@@ -596,16 +613,24 @@
 
     #chat-input-row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
-      border-top: 1px solid #aa44ff44;
-      padding: 8px 10px;
+      background: rgba(170,68,255,0.05);
+      border: 1px solid #aa44ff55;
+      border-radius: 12px;
+      padding: 13px 16px;
+      margin: 8px 6px 6px;
       flex-shrink: 0;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    #chat-input-row:focus-within {
+      border-color: #aa44ff;
+      box-shadow: 0 0 22px #aa44ff40, inset 0 0 14px #aa44ff10;
     }
 
     #chat-prompt {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       color: #aa44ff;
       letter-spacing: 1px;
       white-space: nowrap;
@@ -617,20 +642,22 @@
       border: none;
       outline: none;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 11px;
+      font-size: 13.5px;
       color: #00eeff;
       caret-color: #00eeff;
-      letter-spacing: 1px;
+      letter-spacing: .5px;
+      padding: 3px 0;
     }
-    #chat-input::placeholder { color: #334466; }
+    #chat-input::placeholder { color: #3a4a66; }
 
     .chat-btn {
       background: transparent;
-      border: 1px solid #aa44ff44;
+      border: 1px solid #aa44ff55;
       color: #aa44ff;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 9px;
-      padding: 5px 10px;
+      font-size: 10.5px;
+      padding: 7px 13px;
+      border-radius: 7px;
       cursor: pointer;
       transition: all .2s;
       white-space: nowrap;
