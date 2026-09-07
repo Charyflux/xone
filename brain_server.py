@@ -408,7 +408,7 @@ current_session_id = _new_session()
 # ── App ─────────────────────────────────────────────────────────────────────
 # Versão do X-ONE — incrementa a cada deploy. Aparece no rodapé da interface
 # (barra de status) pra você confirmar visualmente que a nova versão subiu.
-XONE_VERSION = "v1.0.1"
+XONE_VERSION = "v1.0.2"
 
 app = FastAPI(title="X-ONE", version="5.0.0")
 app.add_middleware(
