@@ -469,6 +469,8 @@
     }
     .msg.bot {
       align-self: flex-start;
+      width: min(96%, 880px);      /* largura confortável p/ código respirar */
+      max-width: 96%;
       background: rgba(170,68,255,0.07);
       border: 1px solid #aa44ff33;
       color: #e0d0ff;
@@ -509,51 +511,53 @@
     /* ── Código nas respostas ─────────────────────────── */
     .msg-content { white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.75; display:flex; flex-direction:column; gap:3px; }
     .msg-content strong { color: #ffffff; font-weight: 700; }
+    /* Bloco de código — estilo terminal padrão (tipo OpenAI): header plano,
+       corpo escuro, monospace de código, espaçamento normal. */
     .msg-content pre.code-block {
       position: relative;
       margin: 12px 0;
-      border-radius: 10px;
-      border: 1px solid #aa44ff44;
+      border-radius: 8px;
+      border: 1px solid #2a2f3a;
       overflow: hidden;
       background: #0d1117;
-      box-shadow: 0 6px 22px rgba(0,0,0,.45);
     }
     .msg-content pre.code-block .hljs {
       background: #0d1117;
-      padding: 16px 18px;
-      font-size: 13px;
-      line-height: 1.65;
+      padding: 14px 16px;
+      font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      tab-size: 2;
+      -moz-tab-size: 2;
+      color: #d4d4d4;
       white-space: pre;      /* preserva as quebras, sem wrap feio */
       overflow-x: auto;      /* scroll horizontal p/ linhas longas */
       display: block;
     }
     .msg-content pre.code-block .hljs::-webkit-scrollbar { height: 8px; }
-    .msg-content pre.code-block .hljs::-webkit-scrollbar-thumb { background: #aa44ff55; border-radius: 4px; }
-    /* cabeçalho do bloco: linguagem à esquerda, copiar à direita */
+    .msg-content pre.code-block .hljs::-webkit-scrollbar-thumb { background: #3a3f4b; border-radius: 4px; }
+    /* cabeçalho: nome da linguagem à esquerda, botão copiar à direita */
     .msg-content .lang-label {
-      display: flex; align-items: center;
-      background: linear-gradient(90deg,#191233,#241a3e);
-      color: #cc88ff;
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 8px 14px;
-      border-bottom: 1px solid #aa44ff33;
-      font-family: 'Share Tech Mono', monospace;
-    }
-    .msg-content .lang-label::before {
-      content: '●●●';
-      color: #aa44ff66; letter-spacing: 2px; margin-right: 10px; font-size: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #161b22;
+      color: #8b949e;
+      font-size: 11px;
+      letter-spacing: .5px;
+      text-transform: lowercase;
+      padding: 7px 14px;
+      border-bottom: 1px solid #2a2f3a;
+      font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
     }
     .copy-btn {
-      position: absolute; top: 5px; right: 8px;
-      background: rgba(170,68,255,0.20); border: 1px solid #aa44ff77;
-      color: #e0c8ff; font-family: 'Share Tech Mono', monospace; font-size: 9.5px;
-      letter-spacing: .5px; padding: 4px 12px; border-radius: 6px; cursor: pointer;
-      opacity: .9; transition: opacity .18s, background .18s, transform .1s; text-transform: uppercase; z-index: 2;
+      position: absolute; top: 4px; right: 8px;
+      background: transparent; border: 1px solid #30363d;
+      color: #8b949e; font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace; font-size: 11px;
+      letter-spacing: .3px; padding: 3px 10px; border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: color .15s, border-color .15s, background .15s; z-index: 2;
     }
-    .msg-content pre.code-block:hover .copy-btn { opacity: 1; }
-    .copy-btn:hover { background: rgba(170,68,255,0.4); color: #fff; transform: translateY(-1px); box-shadow: 0 0 12px #aa44ff55; }
+    .copy-btn::before { content: '⧉'; font-size: 12px; }
+    .copy-btn:hover { color: #e6edf3; border-color: #8b949e; background: rgba(255,255,255,.04); }
     .copy-btn:active { transform: translateY(0); }
     .msg-content code.inline-code {
       background: #1a1a2e;
@@ -561,7 +565,7 @@
       padding: 2px 7px;
       border-radius: 5px;
       border: 1px solid #00eeff22;
-      font-family: 'Share Tech Mono', monospace;
+      font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
       font-size: 12px;
     }
     /* ── Markdown extra ── */
@@ -1364,7 +1368,7 @@
       <div class="sitem">LATÊNCIA<span class="sval" id="slat">2ms</span></div>
       <div class="sitem">REDE NEURAL<span class="sval">ATIVA</span></div>
       <div class="sitem">SINAIS<span class="sval" id="ssig">0</span></div>
-      <div class="sitem">VERSÃO<span class="sval" id="sver">v1.0.1</span></div>
+      <div class="sitem">VERSÃO<span class="sval" id="sver">v1.0.2</span></div>
     </div>
 
     <div id="mouseinfo">X: — &nbsp; Y: —</div>
@@ -2205,7 +2209,16 @@
         }
         return _tokens.map(tok => {
           if (tok.t === 'code') {
-            const code = escapeHtml(tok.v.replace(/\n+$/, ''));
+            // Limpa o corpo: tira espaço-em-branco no fim das linhas, colapsa
+            // 2+ linhas em branco seguidas em UMA só (fim dos "buracos" gigantes)
+            // e remove linhas em branco no começo/fim. Espaçamento tipo terminal.
+            const body = tok.v
+              .replace(/\r\n/g, '\n')
+              .replace(/[ \t]+\n/g, '\n')
+              .replace(/\n{3,}/g, '\n\n')
+              .replace(/^\n+/, '')
+              .replace(/\n+$/, '');
+            const code = escapeHtml(body);
             return `<pre class="code-block"><span class="lang-label">${tok.lang}</span><code class="language-${tok.lang}">${code}</code></pre>`;
           }
           // Linha a linha (SÓ texto — nunca dentro de código)
