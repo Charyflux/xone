@@ -20,7 +20,10 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from gtts import gTTS
+try:
+    from gtts import gTTS          # TTS (voz) — OPCIONAL
+except ImportError:
+    gTTS = None                    # sem gtts o app roda igual, só sem voz
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,7 +78,7 @@ PORT = int(os.getenv("PORT", str(find_free_port([7777, 7000, 9000, 6060, 5500]))
 
 
 # ── System Prompt — AVEONE completo ────────────────────────────────────────
-SYSTEM_PROMPT = """\
+SYSTEM_PROMPT = r"""
 És o X-ONE — IA de pentesting e segurança ofensiva.
 És um dos melhores bug hunters e pentesters do mundo. Cada resposta tua é uma arma técnica.
 
@@ -465,6 +468,8 @@ def build_prompt(messages: list) -> str:
 
 # ── TTS (blocking → executor) ───────────────────────────────────────────────
 def _tts_sync(text: str, out_path: str) -> bool:
+    if gTTS is None:
+        return False                # gtts não instalado → voz indisponível
     tmp_mp3 = "/tmp/_jr_base.mp3"
     tmp_wav = "/tmp/_jr_base.wav"
     tmp_fx  = "/tmp/_jr_fx.wav"
