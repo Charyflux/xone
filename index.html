@@ -1364,6 +1364,7 @@
       <div class="sitem">LATÊNCIA<span class="sval" id="slat">2ms</span></div>
       <div class="sitem">REDE NEURAL<span class="sval">ATIVA</span></div>
       <div class="sitem">SINAIS<span class="sval" id="ssig">0</span></div>
+      <div class="sitem">VERSÃO<span class="sval" id="sver">v1.0.1</span></div>
     </div>
 
     <div id="mouseinfo">X: — &nbsp; Y: —</div>
@@ -2994,6 +2995,17 @@
     }
     checkAveoneStatus();
     setInterval(checkAveoneStatus, 15000);
+
+    // ── Versão do X-ONE — confirma no rodapé qual versão está no ar ──────
+    (async function() {
+      const el = document.getElementById('sver');
+      if (!el) return;
+      try {
+        const r = await fetch(`${API}/api/version`);
+        const d = await r.json();
+        if (d && d.version) el.textContent = d.version;
+      } catch { /* mantém o valor fixo do HTML */ }
+    })();
 
     // ── AVEONE URL param — auto-analisa ao arrancar ──────
     (function() {
