@@ -23,10 +23,12 @@ MODEL="${MODEL:-huihui_ai/qwen2.5-abliterate:3b}"
 echo "  🧠  Baixando o modelo sem filtro: $MODEL  (~2 GB)..."
 ollama pull "$MODEL"
 
-# 3) Dependências Python
+# 3) Dependências Python (com fallback pro Kali/Debian — PEP 668)
 echo "  🐍  Instalando dependências Python..."
 python3 -m pip install --upgrade pip >/dev/null 2>&1 || true
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt \
+  || python3 -m pip install --break-system-packages -r requirements.txt \
+  || python3 -m pip install --user --break-system-packages -r requirements.txt
 
 # 4) Config
 [ -f .env ] || { cp .env.example .env; echo "  ⚙️   .env criado a partir do exemplo."; }
