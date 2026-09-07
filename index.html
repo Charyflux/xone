@@ -2185,19 +2185,30 @@
                  (seg.out ? `<div class="md-tool-out">${escapeHtml(seg.out)}</div>` : '');
         }
 
-        // Bloco de texto: divide em blocos de código e texto normal
-        const parts = seg.val.split(/(```[\w]*\n[\s\S]*?```)/g);
-        return parts.map(part => {
-          // Bloco de código fenced
-          const cm = part.match(/^```([\w]*)\n?([\s\S]*)```$/);
-          if (cm) {
-            const lang = cm[1] || 'plaintext';
-            const code = escapeHtml(cm[2].replace(/\n$/, ''));
-            return `<pre class="code-block"><span class="lang-label">${lang||'code'}</span><code class="language-${lang}">${code}</code></pre>`;
+        // Tokeniza em blocos de código (FECHADOS ou NÃO) e texto. Robusto a fence
+        // mal fechado — o modelo às vezes esquece o ``` final. DENTRO de código,
+        // nada de markdown (senão o # do comentário vira título e a indentação some).
+        const _tokens = [];
+        { let s = seg.val, i = 0;
+          while (i < s.length) {
+            const open = s.indexOf('```', i);
+            if (open === -1) { _tokens.push({t:'text', v:s.slice(i)}); break; }
+            if (open > i) _tokens.push({t:'text', v:s.slice(i, open)});
+            let nl = s.indexOf('\n', open + 3); if (nl === -1) nl = s.length;
+            const lang = (s.slice(open + 3, nl).trim() || 'plaintext').split(/\s+/)[0] || 'plaintext';
+            let close = s.indexOf('```', nl + 1);
+            if (close === -1) { _tokens.push({t:'code', lang, v:s.slice(nl + 1)}); break; }
+            _tokens.push({t:'code', lang, v:s.slice(nl + 1, close)});
+            i = close + 3;
           }
-
-          // Linha a linha
-          return part.split('\n').map(line => {
+        }
+        return _tokens.map(tok => {
+          if (tok.t === 'code') {
+            const code = escapeHtml(tok.v.replace(/\n+$/, ''));
+            return `<pre class="code-block"><span class="lang-label">${tok.lang}</span><code class="language-${tok.lang}">${code}</code></pre>`;
+          }
+          // Linha a linha (SÓ texto — nunca dentro de código)
+          return tok.v.split('\n').map(line => {
             const t = line.trim();
             if (!t) return '<div class="md-space"></div>';
 
