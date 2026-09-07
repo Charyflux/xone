@@ -12,7 +12,8 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #000;
+      background: #0c0a1a;
+      background: radial-gradient(ellipse 120% 100% at 50% 0%, #171232 0%, #0e0b22 45%, #080616 100%);
       overflow: hidden;
       width: 100vw;
       height: 100vh;
@@ -1432,10 +1433,7 @@
   <div id="model-switcher">
     <span id="model-label">MODELO</span>
     <select id="model-select" onchange="selectModelDropdown(this.value)">
-      <option value="qwen2.5-coder:7b">☠ SEM FILTROS</option>
-      <option value="qwen2.5-coder:3b">🧠 CODER 3B</option>
-      <option value="llama3.2">🦙 GERAL 3B</option>
-      <option value="qwen2.5:1.5b" selected>⚡ MODO RÁPIDO</option>
+      <option value="huihui_ai/qwen2.5-abliterate:3b" selected>☠ SEM FILTRO</option>
     </select>
     <div id="model-desc"></div>
   </div>
@@ -2011,7 +2009,7 @@
       _neuralRaf = requestAnimationFrame(loop);
       frame++;
 
-      ctx.fillStyle = 'rgba(0, 0, 10, 0.16)';
+      ctx.fillStyle = 'rgba(16, 12, 34, 0.16)';   // rastro roxo escuro (não preto puro)
       ctx.fillRect(0, 0, W, H);
 
       if (burstMode) {
@@ -2045,15 +2043,13 @@
       } else {
         if (_neuralRaf) cancelAnimationFrame(_neuralRaf);
         _neuralRaf = null;
-        ctx.fillStyle = '#00000a';
-        ctx.fillRect(0, 0, W, H);
+        ctx.clearRect(0, 0, W, H);   // transparente → mostra o gradiente do body
       }
     };
 
     init();
-    // Fundo preto estático até conectar à AVEONE
-    ctx.fillStyle = '#00000a';
-    ctx.fillRect(0, 0, W, H);
+    // Canvas transparente até conectar à AVEONE — deixa o gradiente do fundo aparecer
+    ctx.clearRect(0, 0, W, H);
 
   })();
   </script>
@@ -2061,7 +2057,7 @@
   <!-- ══ CHAT LOGIC ══════════════════════════════════════ -->
   <script>
   (function() {
-    const API = window.location.pathname.startsWith('/app/xone') ? '/app/xone' : '';
+    const API = window.location.pathname.startsWith('/xone') ? '/xone' : '';
     const messagesEl = document.getElementById('chat-messages');
     const inputEl    = document.getElementById('chat-input');
     const micBtn     = document.getElementById('mic-btn');
@@ -2069,7 +2065,7 @@
     let listening    = false;
 
     // ── Model switcher ────────────────────────────────
-    let currentModel = 'qwen2.5:1.5b';
+    let currentModel = 'huihui_ai/qwen2.5-abliterate:3b';
 
     // ID de sessão do navegador — isola a conversa desta aba das outras.
     // Persiste em localStorage para sobreviver a reloads.
@@ -2084,17 +2080,11 @@
 
     function _modelShort(m) {
       return ({
-        'qwen2.5-coder:7b': 'sem filtros',
-        'qwen2.5-coder:3b': 'coder 3b',
-        'llama3.2':         'geral 3b',
-        'qwen2.5:1.5b':     'rápido',
-      })[m] || m;
+        'huihui_ai/qwen2.5-abliterate:3b': 'sem filtro',
+      })[m] || 'sem filtro';
     }
     const MODEL_INFO = {
-      'qwen2.5-coder:7b': { color:'#ff7777', desc:'Melhor qualidade de código, mas lento (2-4 min por resposta). Usa quando queres o melhor resultado e não tens pressa.' },
-      'qwen2.5-coder:3b': { color:'#cc88ff', desc:'Bom em código e ~2x mais rápido que o 7B (~1 min). O melhor equilíbrio para o dia a dia.' },
-      'llama3.2':         { color:'#00ff88', desc:'Modelo geral equilibrado e rápido. Ideal para perguntas gerais, explicações e conversa.' },
-      'qwen2.5:1.5b':     { color:'#00eeff', desc:'Respostas simples quase instantâneas. Leve, para perguntas rápidas e diretas.' },
+      'huihui_ai/qwen2.5-abliterate:3b': { color:'#ff7777', desc:'X-ONE sem filtro — modelo abliterated (sem censura). Entrega payloads, exploits e scripts ofensivos sem recusar. Ambiente de pentest autorizado.' },
     };
     window.selectModelDropdown = function(model) {
       currentModel = model;
@@ -2669,11 +2659,9 @@
       document.getElementById('findings-panel').classList.toggle('open', findingsPanelOpen);
     };
 
-    window.xoneLogout = async function() {
-      try {
-        await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'same-origin' });
-      } catch(e) {}
-      window.location.href = '/app/xone/';
+    window.xoneLogout = function() {
+      // Encerra a sessão no gateway de auth (limpa o cookie) e volta ao login.
+      window.location.href = (API || '') + '/logout';
     };
 
     // ── Smart Fuzz ──────────────────────────────────────────────────
@@ -3006,7 +2994,7 @@
   <!-- ── Reports Download ─────────────────────────────────────────── -->
   <script>
   (function() {
-    const API = window.location.pathname.startsWith('/app/xone') ? '/app/xone' : '';
+    const API = window.location.pathname.startsWith('/xone') ? '/xone' : '';
     var _reportsOpen = false;
 
     async function _refreshReportsBadge() {
