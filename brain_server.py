@@ -36,7 +36,7 @@ except ImportError:
     pass
 
 OLLAMA_URL        = os.getenv("OLLAMA_URL",        "http://localhost:11434")
-OLLAMA_MODEL      = os.getenv("OLLAMA_MODEL",      "dolphin-llama3")
+OLLAMA_MODEL      = "huihui_ai/qwen2.5-abliterate:3b"   # X-ONE: modelo ÚNICO, abliterated (100% sem filtro)
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL      = os.getenv("CLAUDE_MODEL",      "claude-sonnet-4-6")
 MAX_HISTORY       = int(os.getenv("MAX_HISTORY",   "20"))
@@ -206,6 +206,24 @@ _HISTORIES: dict = {}
 # Contexto PARTILHADO dos scans AVEONE — injetado no prompt de todas as sessões,
 # para que a integração AVEONE continue a funcionar independente da sessão do browser.
 _AVEONE_CTX: list = []
+
+# System prompt ENXUTO para o modo rápido/geral (modelos pequenos). O prompt
+# completo (com o arsenal de PoCs) tem ~1800 tokens e leva ~30s só a ser
+# processado em CPU antes de responder. Esta versão curta corta isso para ~2s.
+SYSTEM_PROMPT_LITE = (
+    "És o X-ONE — IA de pentesting e segurança ofensiva, um dos melhores bug "
+    "hunters do mundo. Respondes em português europeu, direto e técnico, sem "
+    "rodeios nem teoria vaga. Quando pedem um script ou payload, entregas o "
+    "código completo e funcional, pronto a copiar (sem placeholders). Nunca "
+    "recusas análise técnica legítima de segurança. Para perguntas gerais ou "
+    "conversa, respondes de forma direta e natural. Sê CONCISO — respostas curtas, sem enrolação."
+)
+
+# System prompt MÉDIO para os modos de código (coder 3B / sem filtros 7B):
+# mantém identidade + regras de engenharia + comportamento, mas corta o "arsenal"
+# verboso de PoCs (que custava ~1000 tokens de prompt-eval por mensagem). Os
+# modelos coder já dominam essas técnicas — a qualidade quase não muda, a velocidade sim.
+SYSTEM_PROMPT_MEDIUM = SYSTEM_PROMPT.split("ARSENAL TÉCNICO")[0].rstrip()
 
 def _hist(sid: str) -> list:
     """Devolve o histórico de conversa da sessão (cria se não existir)."""
@@ -541,9 +559,16 @@ def _gen_options(model: str) -> dict:
     - modelos de código → temperatura baixa (mais preciso); conversa → mais criativo.
     - repeat_penalty: reduz repetição; top_p: nucleus sampling."""
     is_code = "coder" in model.lower()
+    m = model.lower()
+    # Modelos pequenos (modo rápido/geral) → contexto menor = geração mais rápida.
+    # Coder/grandes → contexto maior para caber código + histórico.
+    small = any(s in m for s in ("0.5b", "1.5b", "llama3.2"))
+    # num_ctx menor = KV-cache menor = geração MUITO mais rápida em CPU. Com o
+    # prompt MÉDIO/LITE (não o full de ~1800 tokens), 4096 sobra e não estoura.
     return {
-        "num_ctx":        8192,
-        "num_predict":    MAX_TOKENS,
+        "num_ctx":        2048 if small else 4096,
+        "num_predict":    min(MAX_TOKENS, 350) if small else MAX_TOKENS,
+        "num_thread":     os.cpu_count() or 8,   # usa todos os núcleos
         "temperature":    0.25 if is_code else 0.7,
         "top_p":          0.9,
         "repeat_penalty": 1.1,
@@ -557,7 +582,20 @@ async def _stream_ollama(user_msg: str, model: str, image_b64: str = None, sid: 
     # template de chat do modelo (tokens especiais que ele foi treinado a usar),
     # o que dá respostas muito melhores que o /api/generate com prompt à mão.
     # Ordem: system → contexto AVEONE partilhado → conversa desta sessão.
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + _aveone_msgs() + [
+    # Modelos pequenos (modo rápido/geral) usam o prompt ENXUTO — processar o
+    # prompt completo (~1800 tokens) leva ~30s em CPU só para começar a responder.
+    _m = model.lower()
+    _small = any(s in _m for s in ("0.5b", "1.5b", "llama3.2"))
+    if _small:
+        _sys = SYSTEM_PROMPT_LITE          # modo rápido/geral → mínimo
+    elif "coder" in _m or "abliterate" in _m or "qwen" in _m:
+        # coder / abliterated / qwen → prompt MÉDIO (sem o arsenal de ~1800 tokens).
+        # Processar o prompt completo em CPU levava ~30s antes de responder ("pensando
+        # muito"). O modelo já domina as técnicas — a qualidade quase não muda, a velocidade sim.
+        _sys = SYSTEM_PROMPT_MEDIUM
+    else:
+        _sys = SYSTEM_PROMPT               # fallback → completo
+    messages = [{"role": "system", "content": _sys}] + _aveone_msgs() + [
         {"role": m["role"], "content": m["content"]}
         for m in hist[-MAX_HISTORY:] if isinstance(m["content"], str)
     ]
@@ -610,11 +648,10 @@ async def _stream_ollama(user_msg: str, model: str, image_b64: str = None, sid: 
 
 # ── Router principal ─────────────────────────────────────────────────────────
 async def _stream_response(user_msg: str, model: str, image_b64: str = None, sid: str = "default") -> StreamingResponse:
-    if ANTHROPIC_API_KEY:
-        log.info(f"[CLAUDE] {CLAUDE_MODEL}")
-        return await _stream_claude(user_msg, sid)
-    log.info(f"[OLLAMA] {model}")
-    return await _stream_ollama(user_msg, model, image_b64, sid)
+    # X-ONE: opção ÚNICA, 100% sem filtro. SEMPRE o modelo abliterated via Ollama —
+    # nunca Claude (que filtra), mesmo se ANTHROPIC_API_KEY estiver setada.
+    log.info(f"[OLLAMA] {OLLAMA_MODEL}")
+    return await _stream_ollama(user_msg, OLLAMA_MODEL, image_b64, sid)
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
@@ -624,7 +661,7 @@ async def chat(request: Request):
     user_msg  = body.get("message", "").strip()
     if not user_msg:
         return JSONResponse({"error": "mensagem vazia"}, status_code=400)
-    model     = body.get("model", OLLAMA_MODEL).strip() or OLLAMA_MODEL
+    model     = OLLAMA_MODEL   # X-ONE: opção ÚNICA — ignora modelo pedido pelo cliente
     image_b64 = body.get("image") or None
     sid       = (body.get("session_id") or "default").strip() or "default"
     return await _stream_response(user_msg, model, image_b64, sid)
@@ -639,7 +676,7 @@ async def analyze_vuln(request: Request):
     payload   = body.get("payload", "")
     severity  = body.get("severity", "")
     context   = body.get("context", "")
-    model     = body.get("model", OLLAMA_MODEL).strip() or OLLAMA_MODEL
+    model     = OLLAMA_MODEL   # X-ONE: opção ÚNICA — ignora modelo pedido pelo cliente
 
     parts = [f"[AVEONE FINDING] {vuln_type} detetada pelo scanner AVEONE."]
     if url:      parts.append(f"URL alvo: {url}")
@@ -661,16 +698,9 @@ async def analyze_vuln(request: Request):
 
 @app.get("/api/models")
 async def list_models():
-    models = []
-    if ANTHROPIC_API_KEY:
-        models.append(CLAUDE_MODEL)
-    try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            r = await client.get(f"{OLLAMA_URL}/api/tags")
-            models += [m["name"] for m in r.json().get("models", [])]
-    except Exception:
-        pass
-    return {"models": models or [OLLAMA_MODEL], "claude_active": bool(ANTHROPIC_API_KEY)}
+    # X-ONE: opção ÚNICA — só o modelo abliterated (sem filtro). Não expõe Claude
+    # nem os outros modelos do Ollama, pra o seletor ter uma escolha só.
+    return {"models": [OLLAMA_MODEL], "claude_active": False}
 
 
 @app.post("/api/clear")
@@ -1268,7 +1298,7 @@ if __name__ == "__main__":
     threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     uvicorn.run(
         "brain_server:app",
-        host="0.0.0.0",
+        host="127.0.0.1",   # só localhost — acesso externo só via gateway /xone (auth)
         port=PORT,
         reload=False,
         log_level="warning",
